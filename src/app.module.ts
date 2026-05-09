@@ -1,11 +1,17 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
+import { ChatModule } from './chat/chat.module';
+import { MemberModule } from './member/member.module';
+import { MessageModule } from './message/message.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: 'env/.env',
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -21,6 +27,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         synchronize: true,
       }),
     }),
+    UserModule,
+    AuthModule,
+    ChatModule,
+    MemberModule,
+    MessageModule,
   ],
 })
 export class AppModule {}
