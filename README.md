@@ -1,98 +1,169 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# KPI Chat API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+REST API для чат-застосунку, побудований на NestJS із Clean Architecture.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Технології
 
-## Description
+- **NestJS** — фреймворк
+- **TypeORM** + **PostgreSQL** — база даних
+- **JWT** — автентифікація
+- **Nodemailer** — надсилання email (OTP)
+- **class-validator** — валідація DTO
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Швидкий старт
 
-## Project setup
+### 1. Встановити залежності
 
 ```bash
-$ npm install
+npm install
 ```
 
-## Compile and run the project
+### 2. Налаштувати середовище
+
+Скопіювати файл прикладу та заповнити значення:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+cp env/.env.example env/.env
 ```
 
-## Run tests
+Відкрити `env/.env` і вказати:
+
+```env
+PORT=3000
+
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=your_password
+DB_NAME=kpi_chat
+
+JWT_SECRET=your_jwt_secret
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your@gmail.com
+SMTP_PASS=your_app_password
+SMTP_FROM=your@gmail.com
+```
+
+### 3. Запустити PostgreSQL
+
+Переконайтесь що PostgreSQL запущений і база даних існує:
+
+```sql
+CREATE DATABASE kpi_chat;
+```
+
+> Схема бази даних синхронізується автоматично при запуску (`synchronize: true`).
+
+### 4. Запустити сервер
 
 ```bash
-# unit tests
-$ npm run test
+# Режим розробки (з авто-перезавантаженням)
+npm run start:dev
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+# Продакшн збірка
+npm run build
+npm run start:prod
 ```
 
-## Deployment
+Сервер буде доступний за адресою: `http://localhost:3000`
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+---
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Тестування
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Всі unit-тести
+npm run test
+
+# Конкретний файл
+npx jest src/user/user.service.spec.ts
+
+# Тести за назвою
+npx jest --testNamePattern="should register"
+
+# E2E тести (потребують запущеної БД)
+npm run test:e2e
+
+# Покриття коду
+npm run test:cov
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Resources
+## API
 
-Check out a few resources that may come in handy when working with NestJS:
+### Автентифікація
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+| Метод | Endpoint | Опис |
+|-------|----------|------|
+| POST | `/auth/register` | Реєстрація (надсилає OTP на email) |
+| POST | `/auth/login` | Вхід (повертає JWT токен) |
+| POST | `/auth/verify-email` | Підтвердження email через OTP |
+| POST | `/auth/resend-otp` | Повторне надсилання OTP |
 
-## Support
+### Користувач
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+| Метод | Endpoint | Опис | Auth |
+|-------|----------|------|------|
+| GET | `/user/me` | Власний профіль | JWT |
 
-## Stay in touch
+### Чати
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+| Метод | Endpoint | Опис | Auth |
+|-------|----------|------|------|
+| POST | `/chat` | Створити чат | JWT |
+| GET | `/chat` | Список чатів (пагінація) | JWT |
+| GET | `/chat/:chatId` | Деталі чату | Member |
+| PATCH | `/chat/:chatId` | Оновити чат | Member + EDIT_CHAT_INFO |
 
-## License
+### Учасники
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+| Метод | Endpoint | Опис | Auth |
+|-------|----------|------|------|
+| POST | `/chat/:chatId/members` | Додати учасника | Member + ADD_MEMBERS |
+| DELETE | `/chat/:chatId/members/leave` | Вийти з чату | Member |
+| PATCH | `/chat/:chatId/members/:id/ban` | Заблокувати | Member + BAN_MEMBERS |
+| PATCH | `/chat/:chatId/members/:id/unban` | Розблокувати | Member + BAN_MEMBERS |
+| PATCH | `/chat/:chatId/members/:id/permissions` | Змінити права | Member + EDIT_PERMISSIONS |
+| PATCH | `/chat/:chatId/members/:id/role` | Змінити роль | Member + EDIT_PERMISSIONS |
+
+### Повідомлення
+
+| Метод | Endpoint | Опис | Auth |
+|-------|----------|------|------|
+| POST | `/chat/:chatId/messages` | Надіслати повідомлення | Member + SEND_MESSAGES |
+| GET | `/chat/:chatId/messages` | Список повідомлень (пагінація) | Member |
+| DELETE | `/chat/:chatId/messages/:id` | Видалити повідомлення | Member (власне або DELETE_MESSAGES) |
+
+**Пагінація**: `?page=1&limit=20`
+
+**Авторизація**: `Authorization: Bearer <token>`
+
+---
+
+## Архітектура
+
+Проєкт побудований за принципами **Clean Architecture**. Детальний аналіз — у файлі [ANALYSIS.md](./ANALYSIS.md).
+
+Варіанти використання — у файлі [USE-CASE.md](./USE-CASE.md).
+
+```
+src/
+  shared/          # Спільні утиліти (DomainError, Guards, Decorators)
+  mail/            # Модуль надсилання email (DynamicModule)
+  user/            # Користувачі
+  auth/            # Автентифікація та OTP
+  chat/            # Чат-кімнати
+  member/          # Членство та права
+  message/         # Повідомлення
+```
+
+Кожен модуль містить:
+- `*.entity.ts` — TypeORM-сутність
+- `*.factory.ts` — валідація бізнес-інваріантів (чистий TypeScript)
+- `*.errors.ts` — доменні помилки
+- `*.service.ts` — бізнес-логіка та оркестрація
+- `*.controller.ts` — HTTP-шар
+- `*.dto.ts` — валідація вхідних даних
