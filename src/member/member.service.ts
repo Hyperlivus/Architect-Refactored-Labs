@@ -12,6 +12,7 @@ import {
 import { UserService } from '../user/user.service';
 import { UserNotFoundError } from '../user/user.errors';
 import type { AddMemberDto, UpdatePermissionsDto, UpdateRoleDto } from './member.dto';
+import { MemberFactory } from './member.factory';
 
 @Injectable()
 export class MemberService {
@@ -42,15 +43,7 @@ export class MemberService {
   }
 
   async createOwner(chatId: number, userId: number): Promise<Member> {
-    const member = this.repo.create({
-      chatId,
-      userId,
-      role: Role.SUPER_ADMIN,
-      permissions: DEFAULT_PERMISSIONS[Role.SUPER_ADMIN],
-      bannedAt: null,
-      leftAt: null,
-    });
-    return this.repo.save(member);
+    return this.repo.save(this.repo.create(MemberFactory.createOwner(chatId, userId)));
   }
 
   async addMember(chatId: number, dto: AddMemberDto, requesting: Member): Promise<Member> {
@@ -66,31 +59,24 @@ export class MemberService {
     if (existing?.bannedAt) throw new MemberBannedError();
 
     const role = dto.role ?? Role.MEMBER;
-    const permissions = dto.permissions ?? DEFAULT_PERMISSIONS[role];
 
     if (requesting.role !== Role.SUPER_ADMIN && ROLE_RANK[role] >= ROLE_RANK[requesting.role]) {
       throw new InsufficientPermissionsError('Cannot assign a role equal to or higher than your own');
     }
 
+    const data = MemberFactory.create({ chatId, userId: dto.userId, role, permissions: dto.permissions });
+
     // Re-join: reactivate the existing record
     if (existing?.leftAt) {
       existing.leftAt = null;
-      existing.role = role;
-      existing.permissions = permissions;
+      existing.role = data.role;
+      existing.permissions = data.permissions;
       return this.repo.save(existing);
     }
 
     if (existing) throw new AlreadyMemberError();
 
-    const member = this.repo.create({
-      chatId,
-      userId: dto.userId,
-      role,
-      permissions,
-      bannedAt: null,
-      leftAt: null,
-    });
-    return this.repo.save(member);
+    return this.repo.save(this.repo.create(data));
   }
 
   async ban(targetMember: Member, requesting: Member): Promise<void> {

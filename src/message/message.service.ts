@@ -8,6 +8,7 @@ import { MemberService } from '../member/member.service';
 import { Permission } from '../member/member.enum';
 import type { Member } from '../member/member.entity';
 import type { SendMessageDto } from './message.dto';
+import { MessageFactory } from './message.factory';
 import type { PaginationDto } from '../shared/pagination.dto';
 
 @Injectable()
@@ -19,13 +20,8 @@ export class MessageService {
   ) {}
 
   async send(chatId: number, dto: SendMessageDto, member: Member): Promise<Message> {
-    const message = this.repo.create({
-      content: dto.content,
-      chatId,
-      memberId: member.id,
-      deletedAt: null,
-    });
-    return this.repo.save(message);
+    const data = MessageFactory.create({ content: dto.content, chatId, memberId: member.id });
+    return this.repo.save(this.repo.create(data));
   }
 
   async list(

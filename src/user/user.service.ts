@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, Repository } from 'typeorm';
 import { User } from './user.entity';
+import { UserFactory } from './user.factory';
 
 @Injectable()
 export class UserService {
@@ -20,8 +21,8 @@ export class UserService {
   }
 
   create(data: Pick<User, 'email' | 'nickname' | 'tag' | 'passwordHash'>): Promise<User> {
-    const user = this.repo.create({ ...data, emailVerified: false, otp: null });
-    return this.repo.save(user);
+    const validated = UserFactory.create(data);
+    return this.repo.save(this.repo.create(validated));
   }
 
   async update(id: number, data: Partial<User>): Promise<void> {

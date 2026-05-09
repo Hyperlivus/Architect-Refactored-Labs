@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Chat } from './chat.entity';
 import { ChatNotFoundError, ChatTagTakenError } from './chat.errors';
+import { ChatFactory } from './chat.factory';
 import { MemberService } from '../member/member.service';
 import type { CreateChatDto, UpdateChatDto } from './chat.dto';
 import type { PaginationDto } from '../shared/pagination.dto';
@@ -23,7 +24,7 @@ export class ChatService {
     if (existing) throw new ChatTagTakenError();
 
     const chat = await this.repo.save(
-      this.repo.create({ name: dto.name, tag: dto.tag, description: dto.description ?? null }),
+      this.repo.create(ChatFactory.create({ name: dto.name, tag: dto.tag, description: dto.description })),
     );
     await this.memberService.createOwner(chat.id, userId);
     return chat;
