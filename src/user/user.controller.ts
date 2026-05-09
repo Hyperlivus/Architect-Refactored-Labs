@@ -11,7 +11,7 @@ export class UserController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   async getMe(@CurrentUser() userId: number) {
-    const user = await this.userService.findById(userId);
+    const user = await this.userService.findOne({ id: userId });
     if (!user) throw new UserNotFoundError();
     const { passwordHash, otp, ...rest } = user;
     return rest;

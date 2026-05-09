@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, Repository } from 'typeorm';
 import { User } from './user.entity';
 
 @Injectable()
@@ -10,19 +10,13 @@ export class UserService {
     private readonly repo: Repository<User>,
   ) {}
 
-  findById(id: number): Promise<User | null> {
-    return this.repo.findOne({ where: { id } });
-  }
-
-  findByEmail(email: string): Promise<User | null> {
-    return this.repo.findOne({ where: { email } });
+  findOne(where: FindOptionsWhere<User>): Promise<User | null> {
+    return this.repo.findOne({ where });
   }
 
   findByEmailOrTag(emailOrTag: string): Promise<User | null> {
     const isEmail = emailOrTag.includes('@');
-    return isEmail
-      ? this.repo.findOne({ where: { email: emailOrTag } })
-      : this.repo.findOne({ where: { tag: emailOrTag } });
+    return this.findOne(isEmail ? { email: emailOrTag } : { tag: emailOrTag });
   }
 
   create(data: Pick<User, 'email' | 'nickname' | 'tag' | 'passwordHash'>): Promise<User> {

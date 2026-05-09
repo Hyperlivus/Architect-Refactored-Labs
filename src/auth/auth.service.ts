@@ -6,6 +6,7 @@ import type { IMailService } from '../mail/mail.service.interface';
 import { MAIL_SERVICE } from '../mail/mail.service.interface';
 import { UserAlreadyExistsError } from '../user/user.errors';
 import { InvalidCredentialsError, EmailNotVerifiedError, InvalidOtpError } from './auth.errors';
+import { otpEmail } from './auth.email-templates';
 import { RegisterDto } from './register.dto';
 import { LoginDto } from './login.dto';
 import { VerifyEmailDto } from './verify-email.dto';
@@ -23,10 +24,14 @@ export class AuthService {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
+  private sign(userId: number, email: string): string {
+    return this.jwtService.sign({ sub: userId, email });
+  }
+
   async register(dto: RegisterDto): Promise<void> {
     const [byEmail, byTag] = await Promise.all([
-      this.userService.findByEmail(dto.email),
-      this.userService.findByEmailOrTag(dto.tag),
+      this.userService.findOne({ email: dto.email }),
+      this.userService.findOne({ tag: dto.tag }),
     ]);
     if (byEmail) throw new UserAlreadyExistsError('email');
     if (byTag) throw new UserAlreadyExistsError('tag');
@@ -41,7 +46,7 @@ export class AuthService {
 
     const otp = this.generateOtp();
     await this.userService.update(user.id, { otp });
-    await this.mailService.sendOtp(user.email, otp);
+    await this.mailService.send(otpEmail(user.email, otp));
   }
 
   async login(dto: LoginDto): Promise<{ accessToken: string }> {
@@ -53,25 +58,25 @@ export class AuthService {
 
     if (!user.emailVerified) throw new EmailNotVerifiedError();
 
-    return { accessToken: this.jwtService.sign({ sub: user.id, email: user.email }) };
+    return { accessToken: this.sign(user.id, user.email) };
   }
 
   async verifyEmail(dto: VerifyEmailDto): Promise<{ accessToken: string }> {
-    const user = await this.userService.findByEmail(dto.email);
+    const user = await this.userService.findOne({ email: dto.email });
     if (!user) throw new InvalidCredentialsError();
     if (!user.otp || user.otp !== dto.otp) throw new InvalidOtpError();
 
     await this.userService.update(user.id, { emailVerified: true, otp: null });
 
-    return { accessToken: this.jwtService.sign({ sub: user.id, email: user.email }) };
+    return { accessToken: this.sign(user.id, user.email) };
   }
 
   async requestNewOtp(dto: ResendOtpDto): Promise<void> {
-    const user = await this.userService.findByEmail(dto.email);
+    const user = await this.userService.findOne({ email: dto.email });
     if (!user) throw new InvalidCredentialsError();
 
     const otp = this.generateOtp();
     await this.userService.update(user.id, { otp });
-    await this.mailService.sendOtp(user.email, otp);
+    await this.mailService.send(otpEmail(user.email, otp));
   }
 }
