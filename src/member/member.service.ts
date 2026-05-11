@@ -2,7 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Member } from './member.entity';
-import { DEFAULT_PERMISSIONS, Permission, Role, ROLE_RANK } from './member.enum';
+import {
+  DEFAULT_PERMISSIONS,
+  Permission,
+  Role,
+  ROLE_RANK,
+} from './member.enum';
 import {
   AlreadyMemberError,
   InsufficientPermissionsError,
@@ -11,7 +16,11 @@ import {
 } from './member.errors';
 import { UserService } from '../user/user.service';
 import { UserNotFoundError } from '../user/user.errors';
-import type { AddMemberDto, UpdatePermissionsDto, UpdateRoleDto } from './member.dto';
+import type {
+  AddMemberDto,
+  UpdatePermissionsDto,
+  UpdateRoleDto,
+} from './member.dto';
 import { MemberFactory } from './member.factory';
 
 @Injectable()
@@ -31,7 +40,10 @@ export class MemberService {
   }
 
   hasPermission(member: Member, permission: Permission): boolean {
-    return member.role === Role.SUPER_ADMIN || member.permissions.includes(permission);
+    return (
+      member.role === Role.SUPER_ADMIN ||
+      member.permissions.includes(permission)
+    );
   }
 
   // SUPER_ADMIN can act on anyone except themselves
@@ -43,10 +55,16 @@ export class MemberService {
   }
 
   async createOwner(chatId: number, userId: number): Promise<Member> {
-    return this.repo.save(this.repo.create(MemberFactory.createOwner(chatId, userId)));
+    return this.repo.save(
+      this.repo.create(MemberFactory.createOwner(chatId, userId)),
+    );
   }
 
-  async addMember(chatId: number, dto: AddMemberDto, requesting: Member): Promise<Member> {
+  async addMember(
+    chatId: number,
+    dto: AddMemberDto,
+    requesting: Member,
+  ): Promise<Member> {
     if (!this.hasPermission(requesting, Permission.ADD_MEMBERS)) {
       throw new InsufficientPermissionsError();
     }
@@ -60,11 +78,21 @@ export class MemberService {
 
     const role = dto.role ?? Role.MEMBER;
 
-    if (requesting.role !== Role.SUPER_ADMIN && ROLE_RANK[role] >= ROLE_RANK[requesting.role]) {
-      throw new InsufficientPermissionsError('Cannot assign a role equal to or higher than your own');
+    if (
+      requesting.role !== Role.SUPER_ADMIN &&
+      ROLE_RANK[role] >= ROLE_RANK[requesting.role]
+    ) {
+      throw new InsufficientPermissionsError(
+        'Cannot assign a role equal to or higher than your own',
+      );
     }
 
-    const data = MemberFactory.create({ chatId, userId: dto.userId, role, permissions: dto.permissions });
+    const data = MemberFactory.create({
+      chatId,
+      userId: dto.userId,
+      role,
+      permissions: dto.permissions,
+    });
 
     // Re-join: reactivate the existing record
     if (existing?.leftAt) {
@@ -84,7 +112,9 @@ export class MemberService {
       throw new InsufficientPermissionsError();
     }
     if (!this.canActOn(requesting, targetMember)) {
-      throw new InsufficientPermissionsError('Cannot ban a member with equal or higher role');
+      throw new InsufficientPermissionsError(
+        'Cannot ban a member with equal or higher role',
+      );
     }
     if (targetMember.bannedAt) return;
 
@@ -97,7 +127,9 @@ export class MemberService {
       throw new InsufficientPermissionsError();
     }
     if (!this.canActOn(requesting, targetMember)) {
-      throw new InsufficientPermissionsError('Cannot unban a member with equal or higher role');
+      throw new InsufficientPermissionsError(
+        'Cannot unban a member with equal or higher role',
+      );
     }
 
     targetMember.bannedAt = null;
@@ -118,7 +150,9 @@ export class MemberService {
       throw new InsufficientPermissionsError();
     }
     if (!this.canActOn(requesting, targetMember)) {
-      throw new InsufficientPermissionsError('Cannot edit permissions of a member with equal or higher role');
+      throw new InsufficientPermissionsError(
+        'Cannot edit permissions of a member with equal or higher role',
+      );
     }
 
     targetMember.permissions = dto.permissions;
@@ -134,10 +168,17 @@ export class MemberService {
       throw new InsufficientPermissionsError();
     }
     if (!this.canActOn(requesting, targetMember)) {
-      throw new InsufficientPermissionsError('Cannot change role of a member with equal or higher role');
+      throw new InsufficientPermissionsError(
+        'Cannot change role of a member with equal or higher role',
+      );
     }
-    if (requesting.role !== Role.SUPER_ADMIN && ROLE_RANK[dto.role] >= ROLE_RANK[requesting.role]) {
-      throw new InsufficientPermissionsError('Cannot assign a role equal to or higher than your own');
+    if (
+      requesting.role !== Role.SUPER_ADMIN &&
+      ROLE_RANK[dto.role] >= ROLE_RANK[requesting.role]
+    ) {
+      throw new InsufficientPermissionsError(
+        'Cannot assign a role equal to or higher than your own',
+      );
     }
 
     targetMember.role = dto.role;

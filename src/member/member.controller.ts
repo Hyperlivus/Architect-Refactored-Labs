@@ -13,7 +13,11 @@ import {
 import { MemberService } from './member.service';
 import { MemberGuard } from './member.guard';
 import { RequiresPermission } from './requires-permission.decorator';
-import { AddMemberDto, UpdatePermissionsDto, UpdateRoleDto } from './member.dto';
+import {
+  AddMemberDto,
+  UpdatePermissionsDto,
+  UpdateRoleDto,
+} from './member.dto';
 import { Permission } from './member.enum';
 import { JwtAuthGuard } from '../shared/jwt-auth.guard';
 import { CurrentMember } from '../shared/current-member.decorator';

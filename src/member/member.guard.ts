@@ -26,7 +26,8 @@ export class MemberGuard implements CanActivate {
     const member = await this.memberService.findByChatAndUser(chatId, userId);
 
     if (!member) throw new ForbiddenException('Not a member of this chat');
-    if (member.bannedAt) throw new ForbiddenException('You are banned from this chat');
+    if (member.bannedAt)
+      throw new ForbiddenException('You are banned from this chat');
     if (member.leftAt) throw new ForbiddenException('You have left this chat');
 
     request['member'] = member;
@@ -34,7 +35,10 @@ export class MemberGuard implements CanActivate {
     // SUPER_ADMIN bypasses all permission checks
     if (member.role === Role.SUPER_ADMIN) return true;
 
-    const required = this.reflector.get<Permission>(PERMISSION_KEY, context.getHandler());
+    const required = this.reflector.get<Permission>(
+      PERMISSION_KEY,
+      context.getHandler(),
+    );
     if (required && !member.permissions.includes(required)) {
       throw new ForbiddenException('Insufficient permissions');
     }

@@ -13,7 +13,7 @@ export class UserController {
   async getMe(@CurrentUser() userId: number) {
     const user = await this.userService.findOne({ id: userId });
     if (!user) throw new UserNotFoundError();
-    const { passwordHash, otp, ...rest } = user;
+    const { passwordHash: _passwordHash, otp: _otp, ...rest } = user;
     return rest;
   }
 }

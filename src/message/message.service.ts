@@ -19,8 +19,16 @@ export class MessageService {
     private readonly memberService: MemberService,
   ) {}
 
-  async send(chatId: number, dto: SendMessageDto, member: Member): Promise<Message> {
-    const data = MessageFactory.create({ content: dto.content, chatId, memberId: member.id });
+  async send(
+    chatId: number,
+    dto: SendMessageDto,
+    member: Member,
+  ): Promise<Message> {
+    const data = MessageFactory.create({
+      content: dto.content,
+      chatId,
+      memberId: member.id,
+    });
     return this.repo.save(this.repo.create(data));
   }
 
@@ -37,15 +45,26 @@ export class MessageService {
     return { items, total };
   }
 
-  async delete(messageId: number, chatId: number, requesting: Member): Promise<void> {
-    const message = await this.repo.findOne({ where: { id: messageId, chatId } });
+  async delete(
+    messageId: number,
+    chatId: number,
+    requesting: Member,
+  ): Promise<void> {
+    const message = await this.repo.findOne({
+      where: { id: messageId, chatId },
+    });
     if (!message || message.deletedAt) throw new MessageNotFoundError();
 
     const isOwner = message.memberId === requesting.id;
-    const canDelete = this.memberService.hasPermission(requesting, Permission.DELETE_MESSAGES);
+    const canDelete = this.memberService.hasPermission(
+      requesting,
+      Permission.DELETE_MESSAGES,
+    );
 
     if (!isOwner && !canDelete) {
-      throw new InsufficientPermissionsError('You can only delete your own messages');
+      throw new InsufficientPermissionsError(
+        'You can only delete your own messages',
+      );
     }
 
     message.deletedAt = new Date();

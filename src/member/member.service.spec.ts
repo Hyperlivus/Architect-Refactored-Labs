@@ -96,7 +96,11 @@ describe('MemberService', () => {
   });
 
   describe('addMember', () => {
-    const requesting = makeMember({ id: 1, role: Role.ADMIN, permissions: DEFAULT_PERMISSIONS[Role.ADMIN] });
+    const requesting = makeMember({
+      id: 1,
+      role: Role.ADMIN,
+      permissions: DEFAULT_PERMISSIONS[Role.ADMIN],
+    });
 
     it('should create a new member with default MEMBER role', async () => {
       mockUserService.findOne.mockResolvedValue({ id: 2 });
@@ -107,10 +111,12 @@ describe('MemberService', () => {
 
       const result = await service.addMember(5, { userId: 2 }, requesting);
 
-      expect(mockRepo.create).toHaveBeenCalledWith(expect.objectContaining({
-        role: Role.MEMBER,
-        permissions: DEFAULT_PERMISSIONS[Role.MEMBER],
-      }));
+      expect(mockRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          role: Role.MEMBER,
+          permissions: DEFAULT_PERMISSIONS[Role.MEMBER],
+        }),
+      );
       expect(result).toEqual(newMember);
     });
 
@@ -129,20 +135,26 @@ describe('MemberService', () => {
       mockUserService.findOne.mockResolvedValue({ id: 2 });
       mockRepo.findOne.mockResolvedValue(makeMember({ bannedAt: new Date() }));
 
-      await expect(service.addMember(5, { userId: 2 }, requesting)).rejects.toThrow(MemberBannedError);
+      await expect(
+        service.addMember(5, { userId: 2 }, requesting),
+      ).rejects.toThrow(MemberBannedError);
     });
 
     it('should throw AlreadyMemberError when already an active member', async () => {
       mockUserService.findOne.mockResolvedValue({ id: 2 });
       mockRepo.findOne.mockResolvedValue(makeMember({ userId: 2 }));
 
-      await expect(service.addMember(5, { userId: 2 }, requesting)).rejects.toThrow(AlreadyMemberError);
+      await expect(
+        service.addMember(5, { userId: 2 }, requesting),
+      ).rejects.toThrow(AlreadyMemberError);
     });
 
     it('should throw UserNotFoundError when target user does not exist', async () => {
       mockUserService.findOne.mockResolvedValue(null);
 
-      await expect(service.addMember(5, { userId: 99 }, requesting)).rejects.toThrow(UserNotFoundError);
+      await expect(
+        service.addMember(5, { userId: 99 }, requesting),
+      ).rejects.toThrow(UserNotFoundError);
     });
 
     it('should throw InsufficientPermissionsError when ADMIN tries to assign ADMIN role', async () => {
@@ -162,34 +174,55 @@ describe('MemberService', () => {
       mockRepo.create.mockReturnValue(newAdmin);
       mockRepo.save.mockResolvedValue(newAdmin);
 
-      const result = await service.addMember(5, { userId: 2, role: Role.ADMIN }, superAdmin);
+      const result = await service.addMember(
+        5,
+        { userId: 2, role: Role.ADMIN },
+        superAdmin,
+      );
       expect(result.role).toBe(Role.ADMIN);
     });
   });
 
   describe('ban', () => {
     it('should set bannedAt when actor has permission and higher role', async () => {
-      const actor = makeMember({ id: 1, role: Role.ADMIN, permissions: DEFAULT_PERMISSIONS[Role.ADMIN] });
+      const actor = makeMember({
+        id: 1,
+        role: Role.ADMIN,
+        permissions: DEFAULT_PERMISSIONS[Role.ADMIN],
+      });
       const target = makeMember({ id: 2, role: Role.MEMBER });
-      mockRepo.save.mockResolvedValue({ ...target, bannedAt: expect.any(Date) });
+      mockRepo.save.mockResolvedValue({
+        ...target,
+        bannedAt: expect.any(Date) as unknown,
+      });
 
       await service.ban(target, actor);
 
-      expect(mockRepo.save).toHaveBeenCalledWith(expect.objectContaining({ bannedAt: expect.any(Date) }));
+      expect(mockRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ bannedAt: expect.any(Date) as unknown }),
+      );
     });
 
     it('should throw when actor lacks BAN_MEMBERS permission', async () => {
       const actor = makeMember({ id: 1, role: Role.MEMBER, permissions: [] });
       const target = makeMember({ id: 2 });
 
-      await expect(service.ban(target, actor)).rejects.toThrow(InsufficientPermissionsError);
+      await expect(service.ban(target, actor)).rejects.toThrow(
+        InsufficientPermissionsError,
+      );
     });
 
     it('should throw when ADMIN tries to ban another ADMIN', async () => {
-      const actor = makeMember({ id: 1, role: Role.ADMIN, permissions: DEFAULT_PERMISSIONS[Role.ADMIN] });
+      const actor = makeMember({
+        id: 1,
+        role: Role.ADMIN,
+        permissions: DEFAULT_PERMISSIONS[Role.ADMIN],
+      });
       const target = makeMember({ id: 2, role: Role.ADMIN });
 
-      await expect(service.ban(target, actor)).rejects.toThrow(InsufficientPermissionsError);
+      await expect(service.ban(target, actor)).rejects.toThrow(
+        InsufficientPermissionsError,
+      );
     });
 
     it('should be a no-op when target is already banned', async () => {
@@ -204,11 +237,16 @@ describe('MemberService', () => {
   describe('leave', () => {
     it('should set leftAt to current date', async () => {
       const member = makeMember();
-      mockRepo.save.mockResolvedValue({ ...member, leftAt: expect.any(Date) });
+      mockRepo.save.mockResolvedValue({
+        ...member,
+        leftAt: expect.any(Date) as unknown,
+      });
 
       await service.leave(member);
 
-      expect(mockRepo.save).toHaveBeenCalledWith(expect.objectContaining({ leftAt: expect.any(Date) }));
+      expect(mockRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ leftAt: expect.any(Date) as unknown }),
+      );
     });
   });
 
@@ -216,7 +254,9 @@ describe('MemberService', () => {
     it('should update permissions when actor has EDIT_PERMISSIONS and higher role', async () => {
       const actor = makeMember({ id: 1, role: Role.SUPER_ADMIN });
       const target = makeMember({ id: 2, role: Role.MEMBER });
-      const dto = { permissions: [Permission.SEND_MESSAGES, Permission.ADD_MEMBERS] };
+      const dto = {
+        permissions: [Permission.SEND_MESSAGES, Permission.ADD_MEMBERS],
+      };
       mockRepo.save.mockResolvedValue({ ...target, ...dto });
 
       const result = await service.updatePermissions(target, dto, actor);
@@ -227,14 +267,22 @@ describe('MemberService', () => {
       const actor = makeMember({ id: 1, role: Role.ADMIN, permissions: [] });
       const target = makeMember({ id: 2, role: Role.MEMBER });
 
-      await expect(service.updatePermissions(target, { permissions: [] }, actor)).rejects.toThrow(InsufficientPermissionsError);
+      await expect(
+        service.updatePermissions(target, { permissions: [] }, actor),
+      ).rejects.toThrow(InsufficientPermissionsError);
     });
 
     it('should throw when ADMIN tries to edit another ADMIN permissions', async () => {
-      const actor = makeMember({ id: 1, role: Role.ADMIN, permissions: DEFAULT_PERMISSIONS[Role.ADMIN] });
+      const actor = makeMember({
+        id: 1,
+        role: Role.ADMIN,
+        permissions: DEFAULT_PERMISSIONS[Role.ADMIN],
+      });
       const target = makeMember({ id: 2, role: Role.ADMIN });
 
-      await expect(service.updatePermissions(target, { permissions: [] }, actor)).rejects.toThrow(InsufficientPermissionsError);
+      await expect(
+        service.updatePermissions(target, { permissions: [] }, actor),
+      ).rejects.toThrow(InsufficientPermissionsError);
     });
   });
 
@@ -242,17 +290,31 @@ describe('MemberService', () => {
     it('should update role and reset permissions to defaults', async () => {
       const actor = makeMember({ id: 1, role: Role.SUPER_ADMIN });
       const target = makeMember({ id: 2, role: Role.MEMBER });
-      mockRepo.save.mockResolvedValue({ ...target, role: Role.ADMIN, permissions: DEFAULT_PERMISSIONS[Role.ADMIN] });
+      mockRepo.save.mockResolvedValue({
+        ...target,
+        role: Role.ADMIN,
+        permissions: DEFAULT_PERMISSIONS[Role.ADMIN],
+      });
 
-      const result = await service.updateRole(target, { role: Role.ADMIN }, actor);
+      const result = await service.updateRole(
+        target,
+        { role: Role.ADMIN },
+        actor,
+      );
       expect(result.role).toBe(Role.ADMIN);
     });
 
     it('should throw when ADMIN tries to promote someone to ADMIN', async () => {
-      const actor = makeMember({ id: 1, role: Role.ADMIN, permissions: DEFAULT_PERMISSIONS[Role.ADMIN] });
+      const actor = makeMember({
+        id: 1,
+        role: Role.ADMIN,
+        permissions: DEFAULT_PERMISSIONS[Role.ADMIN],
+      });
       const target = makeMember({ id: 2, role: Role.MEMBER });
 
-      await expect(service.updateRole(target, { role: Role.ADMIN }, actor)).rejects.toThrow(InsufficientPermissionsError);
+      await expect(
+        service.updateRole(target, { role: Role.ADMIN }, actor),
+      ).rejects.toThrow(InsufficientPermissionsError);
     });
   });
 
@@ -269,7 +331,9 @@ describe('MemberService', () => {
       const member = makeMember({ id: 10, chatId: 99 });
       mockRepo.findOne.mockResolvedValue(member);
 
-      await expect(service.getTargetMember(5, 10)).rejects.toThrow(MemberNotFoundError);
+      await expect(service.getTargetMember(5, 10)).rejects.toThrow(
+        MemberNotFoundError,
+      );
     });
   });
 });

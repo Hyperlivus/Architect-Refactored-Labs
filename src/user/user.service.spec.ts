@@ -53,26 +53,39 @@ describe('UserService', () => {
     it('should search by email when input contains @', async () => {
       mockRepo.findOne.mockResolvedValue(mockUser);
       await service.findByEmailOrTag('test@test.com');
-      expect(mockRepo.findOne).toHaveBeenCalledWith({ where: { email: 'test@test.com' } });
+      expect(mockRepo.findOne).toHaveBeenCalledWith({
+        where: { email: 'test@test.com' },
+      });
     });
 
     it('should search by tag when input has no @', async () => {
       mockRepo.findOne.mockResolvedValue(mockUser);
       await service.findByEmailOrTag('testuser');
-      expect(mockRepo.findOne).toHaveBeenCalledWith({ where: { tag: 'testuser' } });
+      expect(mockRepo.findOne).toHaveBeenCalledWith({
+        where: { tag: 'testuser' },
+      });
     });
   });
 
   describe('create', () => {
     it('should create and save a user with correct defaults', async () => {
-      const data = { email: 'a@a.com', nickname: 'Alice', tag: 'alice', passwordHash: 'hash' };
+      const data = {
+        email: 'a@a.com',
+        nickname: 'Alice',
+        tag: 'alice',
+        passwordHash: 'hash',
+      };
       const created = { ...data, emailVerified: false, otp: null };
       mockRepo.create.mockReturnValue(created);
       mockRepo.save.mockResolvedValue({ id: 1, ...created });
 
       const result = await service.create(data);
 
-      expect(mockRepo.create).toHaveBeenCalledWith({ ...data, emailVerified: false, otp: null });
+      expect(mockRepo.create).toHaveBeenCalledWith({
+        ...data,
+        emailVerified: false,
+        otp: null,
+      });
       expect(result.id).toBe(1);
     });
   });

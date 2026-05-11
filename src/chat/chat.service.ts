@@ -24,7 +24,13 @@ export class ChatService {
     if (existing) throw new ChatTagTakenError();
 
     const chat = await this.repo.save(
-      this.repo.create(ChatFactory.create({ name: dto.name, tag: dto.tag, description: dto.description })),
+      this.repo.create(
+        ChatFactory.create({
+          name: dto.name,
+          tag: dto.tag,
+          description: dto.description,
+        }),
+      ),
     );
     await this.memberService.createOwner(chat.id, userId);
     return chat;
@@ -36,12 +42,19 @@ export class ChatService {
     return chat;
   }
 
-  async update(chat: Chat, dto: UpdateChatDto, requesting: Member): Promise<Chat> {
-    if (!this.memberService.hasPermission(requesting, Permission.EDIT_CHAT_INFO)) {
+  async update(
+    chat: Chat,
+    dto: UpdateChatDto,
+    requesting: Member,
+  ): Promise<Chat> {
+    if (
+      !this.memberService.hasPermission(requesting, Permission.EDIT_CHAT_INFO)
+    ) {
       throw new InsufficientPermissionsError();
     }
     if (dto.name !== undefined) chat.name = dto.name;
-    if (dto.description !== undefined) chat.description = dto.description ?? null;
+    if (dto.description !== undefined)
+      chat.description = dto.description ?? null;
     return this.repo.save(chat);
   }
 

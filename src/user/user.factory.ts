@@ -21,10 +21,14 @@ export class UserFactory {
       throw new InvalidUserDataError('Invalid email format');
     }
     if (!this.TAG_REGEX.test(params.tag)) {
-      throw new InvalidUserDataError('Tag must be 3-20 alphanumeric characters or underscores');
+      throw new InvalidUserDataError(
+        'Tag must be 3-20 alphanumeric characters or underscores',
+      );
     }
     if (params.nickname.length < 2 || params.nickname.length > 50) {
-      throw new InvalidUserDataError('Nickname must be between 2 and 50 characters');
+      throw new InvalidUserDataError(
+        'Nickname must be between 2 and 50 characters',
+      );
     }
     if (!params.passwordHash) {
       throw new InvalidUserDataError('Password hash is required');

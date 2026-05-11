@@ -9,7 +9,6 @@ import { UserController } from '../src/user/user.controller';
 import { UserService } from '../src/user/user.service';
 import { JwtAuthGuard } from '../src/shared/jwt-auth.guard';
 import { DomainExceptionFilter } from '../src/shared/domain-exception.filter';
-import { UserNotFoundError } from '../src/user/user.errors';
 import {
   EmailNotVerifiedError,
   InvalidCredentialsError,
@@ -34,7 +33,13 @@ describe('Auth & User (e2e)', () => {
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [JwtModule.register({ global: true, secret: JWT_SECRET, signOptions: { expiresIn: '1d' } })],
+      imports: [
+        JwtModule.register({
+          global: true,
+          secret: JWT_SECRET,
+          signOptions: { expiresIn: '1d' },
+        }),
+      ],
       controllers: [AuthController, UserController],
       providers: [
         { provide: AuthService, useValue: mockAuthService },
@@ -44,7 +49,13 @@ describe('Auth & User (e2e)', () => {
     }).compile();
 
     app = module.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
     app.useGlobalFilters(new DomainExceptionFilter());
     await app.init();
 
@@ -56,7 +67,12 @@ describe('Auth & User (e2e)', () => {
 
   // ─── POST /auth/register ───────────────────────────────────────────────
   describe('POST /auth/register', () => {
-    const validBody = { email: 'test@test.com', nickname: 'Test', tag: 'testuser', password: 'password123' };
+    const validBody = {
+      email: 'test@test.com',
+      nickname: 'Test',
+      tag: 'testuser',
+      password: 'password123',
+    };
 
     it('201 — registers successfully', async () => {
       mockAuthService.register.mockResolvedValue(undefined);
@@ -65,11 +81,15 @@ describe('Auth & User (e2e)', () => {
         .post('/auth/register')
         .send(validBody)
         .expect(201)
-        .expect(({ body }) => expect(body.message).toBeDefined());
+        .expect(({ body }: { body: Record<string, unknown> }) =>
+          expect(body.message).toBeDefined(),
+        );
     });
 
     it('409 — email already exists', async () => {
-      mockAuthService.register.mockRejectedValue(new UserAlreadyExistsError('email'));
+      mockAuthService.register.mockRejectedValue(
+        new UserAlreadyExistsError('email'),
+      );
 
       await request(app.getHttpServer())
         .post('/auth/register')
@@ -119,7 +139,9 @@ describe('Auth & User (e2e)', () => {
         .post('/auth/login')
         .send(validBody)
         .expect(200)
-        .expect(({ body }) => expect(body.accessToken).toBe('token123'));
+        .expect(({ body }: { body: Record<string, unknown> }) =>
+          expect(body.accessToken).toBe('token123'),
+        );
     });
 
     it('401 — invalid credentials', async () => {
@@ -153,13 +175,17 @@ describe('Auth & User (e2e)', () => {
     const validBody = { email: 'test@test.com', otp: '123456' };
 
     it('200 — verifies email and returns token', async () => {
-      mockAuthService.verifyEmail.mockResolvedValue({ accessToken: 'verified-token' });
+      mockAuthService.verifyEmail.mockResolvedValue({
+        accessToken: 'verified-token',
+      });
 
       await request(app.getHttpServer())
         .post('/auth/verify-email')
         .send(validBody)
         .expect(200)
-        .expect(({ body }) => expect(body.accessToken).toBe('verified-token'));
+        .expect(({ body }: { body: Record<string, unknown> }) =>
+          expect(body.accessToken).toBe('verified-token'),
+        );
     });
 
     it('400 — invalid OTP', async () => {
@@ -188,11 +214,15 @@ describe('Auth & User (e2e)', () => {
         .post('/auth/resend-otp')
         .send({ email: 'test@test.com' })
         .expect(200)
-        .expect(({ body }) => expect(body.message).toBeDefined());
+        .expect(({ body }: { body: Record<string, unknown> }) =>
+          expect(body.message).toBeDefined(),
+        );
     });
 
     it('401 — user not found treated as invalid credentials', async () => {
-      mockAuthService.requestNewOtp.mockRejectedValue(new InvalidCredentialsError());
+      mockAuthService.requestNewOtp.mockRejectedValue(
+        new InvalidCredentialsError(),
+      );
 
       await request(app.getHttpServer())
         .post('/auth/resend-otp')
@@ -216,15 +246,20 @@ describe('Auth & User (e2e)', () => {
     it('200 — returns user data without sensitive fields', async () => {
       const token = makeToken(1);
       mockUserService.findOne.mockResolvedValue({
-        id: 1, email: 'test@test.com', nickname: 'Test', tag: 'testuser',
-        emailVerified: true, passwordHash: 'secret', otp: '123456',
+        id: 1,
+        email: 'test@test.com',
+        nickname: 'Test',
+        tag: 'testuser',
+        emailVerified: true,
+        passwordHash: 'secret',
+        otp: '123456',
       });
 
       await request(app.getHttpServer())
         .get('/user/me')
         .set('Authorization', `Bearer ${token}`)
         .expect(200)
-        .expect(({ body }) => {
+        .expect(({ body }: { body: Record<string, unknown> }) => {
           expect(body.id).toBe(1);
           expect(body.email).toBe('test@test.com');
           expect(body.passwordHash).toBeUndefined();

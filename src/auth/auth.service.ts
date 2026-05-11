@@ -5,7 +5,11 @@ import { UserService } from '../user/user.service';
 import type { IMailService } from '../mail/mail.service.interface';
 import { MAIL_SERVICE } from '../mail/mail.service.interface';
 import { UserAlreadyExistsError } from '../user/user.errors';
-import { InvalidCredentialsError, EmailNotVerifiedError, InvalidOtpError } from './auth.errors';
+import {
+  InvalidCredentialsError,
+  EmailNotVerifiedError,
+  InvalidOtpError,
+} from './auth.errors';
 import { otpEmail } from './auth.email-templates';
 import { RegisterDto } from './register.dto';
 import { LoginDto } from './login.dto';

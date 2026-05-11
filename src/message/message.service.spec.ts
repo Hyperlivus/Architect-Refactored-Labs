@@ -19,12 +19,27 @@ const mockRepo = {
 const mockMemberService = { hasPermission: jest.fn() };
 
 const makeMessage = (overrides: Partial<Message> = {}): Message => ({
-  id: 1, content: 'Hello', chatId: 5, memberId: 10, createdAt: new Date(), deletedAt: null,
+  id: 1,
+  content: 'Hello',
+  chatId: 5,
+  memberId: 10,
+  createdAt: new Date(),
+  deletedAt: null,
   ...overrides,
 });
 
-const makeMember = (id = 10, role = Role.MEMBER, permissions: Permission[] = [Permission.SEND_MESSAGES]): Member => ({
-  id, userId: 1, chatId: 5, role, permissions, bannedAt: null, leftAt: null,
+const makeMember = (
+  id = 10,
+  role = Role.MEMBER,
+  permissions: Permission[] = [Permission.SEND_MESSAGES],
+): Member => ({
+  id,
+  userId: 1,
+  chatId: 5,
+  role,
+  permissions,
+  bannedAt: null,
+  leftAt: null,
 });
 
 describe('MessageService', () => {
@@ -52,11 +67,13 @@ describe('MessageService', () => {
 
       const result = await service.send(5, { content: 'Hello' }, member);
 
-      expect(mockRepo.create).toHaveBeenCalledWith(expect.objectContaining({
-        content: 'Hello',
-        chatId: 5,
-        memberId: member.id,
-      }));
+      expect(mockRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: 'Hello',
+          chatId: 5,
+          memberId: member.id,
+        }),
+      );
       expect(result).toEqual(msg);
     });
   });
@@ -70,11 +87,13 @@ describe('MessageService', () => {
 
       expect(result.items).toHaveLength(2);
       expect(result.total).toBe(2);
-      expect(mockRepo.findAndCount).toHaveBeenCalledWith(expect.objectContaining({
-        where: { chatId: 5, deletedAt: IsNull() },
-        skip: 0,
-        take: 20,
-      }));
+      expect(mockRepo.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { chatId: 5, deletedAt: IsNull() },
+          skip: 0,
+          take: 20,
+        }),
+      );
     });
   });
 
@@ -88,7 +107,9 @@ describe('MessageService', () => {
 
       await service.delete(1, 5, member);
 
-      expect(mockRepo.save).toHaveBeenCalledWith(expect.objectContaining({ deletedAt: expect.any(Date) }));
+      expect(mockRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ deletedAt: expect.any(Date) as unknown }),
+      );
     });
 
     it('should allow member with DELETE_MESSAGES to delete others messages', async () => {
@@ -109,20 +130,26 @@ describe('MessageService', () => {
       mockRepo.findOne.mockResolvedValue(msg);
       mockMemberService.hasPermission.mockReturnValue(false);
 
-      await expect(service.delete(1, 5, member)).rejects.toThrow(InsufficientPermissionsError);
+      await expect(service.delete(1, 5, member)).rejects.toThrow(
+        InsufficientPermissionsError,
+      );
     });
 
     it('should throw MessageNotFoundError when message does not exist', async () => {
       mockRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.delete(99, 5, makeMember())).rejects.toThrow(MessageNotFoundError);
+      await expect(service.delete(99, 5, makeMember())).rejects.toThrow(
+        MessageNotFoundError,
+      );
     });
 
     it('should throw MessageNotFoundError when message is already deleted', async () => {
       const msg = makeMessage({ deletedAt: new Date() });
       mockRepo.findOne.mockResolvedValue(msg);
 
-      await expect(service.delete(1, 5, makeMember())).rejects.toThrow(MessageNotFoundError);
+      await expect(service.delete(1, 5, makeMember())).rejects.toThrow(
+        MessageNotFoundError,
+      );
     });
   });
 });

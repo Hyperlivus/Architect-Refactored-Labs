@@ -20,7 +20,9 @@ export class UserService {
     return this.findOne(isEmail ? { email: emailOrTag } : { tag: emailOrTag });
   }
 
-  create(data: Pick<User, 'email' | 'nickname' | 'tag' | 'passwordHash'>): Promise<User> {
+  create(
+    data: Pick<User, 'email' | 'nickname' | 'tag' | 'passwordHash'>,
+  ): Promise<User> {
     const validated = UserFactory.create(data);
     return this.repo.save(this.repo.create(validated));
   }

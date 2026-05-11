@@ -20,10 +20,24 @@ const mockMemberService = {
   hasPermission: jest.fn(),
 };
 
-const mockChat: Chat = { id: 1, name: 'Test Chat', tag: 'testchat', description: null };
+const mockChat: Chat = {
+  id: 1,
+  name: 'Test Chat',
+  tag: 'testchat',
+  description: null,
+};
 
-const makeMember = (role = Role.ADMIN, permissions = [Permission.EDIT_CHAT_INFO]): Member => ({
-  id: 10, userId: 1, chatId: 1, role, permissions, bannedAt: null, leftAt: null,
+const makeMember = (
+  role = Role.ADMIN,
+  permissions = [Permission.EDIT_CHAT_INFO],
+): Member => ({
+  id: 10,
+  userId: 1,
+  chatId: 1,
+  role,
+  permissions,
+  bannedAt: null,
+  leftAt: null,
 });
 
 describe('ChatService', () => {
@@ -49,17 +63,25 @@ describe('ChatService', () => {
       mockRepo.save.mockResolvedValue(mockChat);
       mockMemberService.createOwner.mockResolvedValue({});
 
-      const result = await service.create({ name: 'Test Chat', tag: 'testchat' }, 1);
+      const result = await service.create(
+        { name: 'Test Chat', tag: 'testchat' },
+        1,
+      );
 
       expect(mockRepo.save).toHaveBeenCalled();
-      expect(mockMemberService.createOwner).toHaveBeenCalledWith(mockChat.id, 1);
+      expect(mockMemberService.createOwner).toHaveBeenCalledWith(
+        mockChat.id,
+        1,
+      );
       expect(result).toEqual(mockChat);
     });
 
     it('should throw ChatTagTakenError when tag is already used', async () => {
       mockRepo.findOne.mockResolvedValue(mockChat);
 
-      await expect(service.create({ name: 'New', tag: 'testchat' }, 1)).rejects.toThrow(ChatTagTakenError);
+      await expect(
+        service.create({ name: 'New', tag: 'testchat' }, 1),
+      ).rejects.toThrow(ChatTagTakenError);
     });
   });
 
@@ -81,7 +103,11 @@ describe('ChatService', () => {
       mockMemberService.hasPermission.mockReturnValue(true);
       mockRepo.save.mockResolvedValue({ ...mockChat, name: 'Updated' });
 
-      const result = await service.update(mockChat, { name: 'Updated' }, member);
+      const result = await service.update(
+        mockChat,
+        { name: 'Updated' },
+        member,
+      );
 
       expect(result.name).toBe('Updated');
     });
@@ -90,7 +116,9 @@ describe('ChatService', () => {
       const member = makeMember(Role.MEMBER, []);
       mockMemberService.hasPermission.mockReturnValue(false);
 
-      await expect(service.update(mockChat, { name: 'x' }, member)).rejects.toThrow(InsufficientPermissionsError);
+      await expect(
+        service.update(mockChat, { name: 'x' }, member),
+      ).rejects.toThrow(InsufficientPermissionsError);
     });
   });
 
@@ -102,7 +130,9 @@ describe('ChatService', () => {
 
       expect(result.items).toEqual([mockChat]);
       expect(result.total).toBe(1);
-      expect(mockRepo.findAndCount).toHaveBeenCalledWith(expect.objectContaining({ skip: 0, take: 20 }));
+      expect(mockRepo.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 0, take: 20 }),
+      );
     });
 
     it('should calculate correct skip for page 2', async () => {
@@ -110,7 +140,9 @@ describe('ChatService', () => {
 
       await service.list({ page: 2, limit: 10 });
 
-      expect(mockRepo.findAndCount).toHaveBeenCalledWith(expect.objectContaining({ skip: 10, take: 10 }));
+      expect(mockRepo.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 10, take: 10 }),
+      );
     });
   });
 });

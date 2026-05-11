@@ -4,6 +4,6 @@ import { Request } from 'express';
 export const CurrentMember = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext) => {
     const request = ctx.switchToHttp().getRequest<Request>();
-    return request['member'];
+    return request['member'] as unknown;
   },
 );

@@ -10,11 +10,7 @@ export class InvalidMessageDataError extends DomainError {
 export class MessageFactory {
   private static readonly MAX_LENGTH = 4000;
 
-  static create(params: {
-    content: string;
-    chatId: number;
-    memberId: number;
-  }) {
+  static create(params: { content: string; chatId: number; memberId: number }) {
     if (!params.content.trim()) {
       throw new InvalidMessageDataError('Message content cannot be empty');
     }

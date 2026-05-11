@@ -6,7 +6,9 @@ import type { MailModuleOptions } from './mail.service.interface';
 interface AsyncOptions {
   imports?: any[];
   inject?: any[];
-  useFactory: (...args: any[]) => Promise<MailModuleOptions> | MailModuleOptions;
+  useFactory: (
+    ...args: any[]
+  ) => Promise<MailModuleOptions> | MailModuleOptions;
 }
 
 @Module({})

@@ -9,12 +9,17 @@ import type { Member } from './member.entity';
 const mockMemberService = { findByChatAndUser: jest.fn() };
 const mockReflector = { get: jest.fn() };
 
-const buildContext = (userId: number, chatId: number): ExecutionContext => ({
-  switchToHttp: () => ({
-    getRequest: () => ({ user: { id: userId }, params: { chatId: String(chatId) }, member: null }),
-  }),
-  getHandler: () => ({}),
-} as unknown as ExecutionContext);
+const buildContext = (userId: number, chatId: number): ExecutionContext =>
+  ({
+    switchToHttp: () => ({
+      getRequest: () => ({
+        user: { id: userId },
+        params: { chatId: String(chatId) },
+        member: null,
+      }),
+    }),
+    getHandler: () => ({}),
+  }) as unknown as ExecutionContext;
 
 const makeMember = (overrides: Partial<Member> = {}): Member => ({
   id: 10,
@@ -46,33 +51,49 @@ describe('MemberGuard', () => {
 
   it('should throw ForbiddenException when user is not a member', async () => {
     mockMemberService.findByChatAndUser.mockResolvedValue(null);
-    await expect(guard.canActivate(buildContext(1, 5))).rejects.toThrow(ForbiddenException);
+    await expect(guard.canActivate(buildContext(1, 5))).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 
   it('should throw ForbiddenException when user is banned', async () => {
-    mockMemberService.findByChatAndUser.mockResolvedValue(makeMember({ bannedAt: new Date() }));
-    await expect(guard.canActivate(buildContext(1, 5))).rejects.toThrow(ForbiddenException);
+    mockMemberService.findByChatAndUser.mockResolvedValue(
+      makeMember({ bannedAt: new Date() }),
+    );
+    await expect(guard.canActivate(buildContext(1, 5))).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 
   it('should throw ForbiddenException when user has left', async () => {
-    mockMemberService.findByChatAndUser.mockResolvedValue(makeMember({ leftAt: new Date() }));
-    await expect(guard.canActivate(buildContext(1, 5))).rejects.toThrow(ForbiddenException);
+    mockMemberService.findByChatAndUser.mockResolvedValue(
+      makeMember({ leftAt: new Date() }),
+    );
+    await expect(guard.canActivate(buildContext(1, 5))).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 
   it('should throw ForbiddenException when required permission is missing', async () => {
     mockMemberService.findByChatAndUser.mockResolvedValue(makeMember());
     mockReflector.get.mockReturnValue(Permission.BAN_MEMBERS);
-    await expect(guard.canActivate(buildContext(1, 5))).rejects.toThrow(ForbiddenException);
+    await expect(guard.canActivate(buildContext(1, 5))).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 
   it('should return true when member has the required permission', async () => {
-    mockMemberService.findByChatAndUser.mockResolvedValue(makeMember({ permissions: [Permission.SEND_MESSAGES] }));
+    mockMemberService.findByChatAndUser.mockResolvedValue(
+      makeMember({ permissions: [Permission.SEND_MESSAGES] }),
+    );
     mockReflector.get.mockReturnValue(Permission.SEND_MESSAGES);
     expect(await guard.canActivate(buildContext(1, 5))).toBe(true);
   });
 
   it('should allow SUPER_ADMIN regardless of permission metadata', async () => {
-    mockMemberService.findByChatAndUser.mockResolvedValue(makeMember({ role: Role.SUPER_ADMIN }));
+    mockMemberService.findByChatAndUser.mockResolvedValue(
+      makeMember({ role: Role.SUPER_ADMIN }),
+    );
     mockReflector.get.mockReturnValue(Permission.BAN_MEMBERS);
     expect(await guard.canActivate(buildContext(1, 5))).toBe(true);
   });
