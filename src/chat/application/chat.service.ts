@@ -23,7 +23,7 @@ export class ChatService {
     const existing = await this.chatRepository.findByTag(dto.tag);
     if (existing) throw new ChatTagTakenError();
 
-    const chat = await this.chatRepository.create(
+    const chat = await this.chatRepository.save(
       ChatFactory.create({
         name: dto.name,
         tag: dto.tag,

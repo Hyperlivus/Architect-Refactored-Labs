@@ -70,19 +70,6 @@ export class MessageRepository implements IMessageRepository {
       );
   }
 
-  async create(domain: MessageDomain): Promise<MessageDomain> {
-    const entity = this.orm.create({
-      content: domain.content,
-      chatId: domain.chatId,
-      memberId: domain.memberId,
-      deletedAt: domain.deletedAt,
-      scheduledAt: domain.scheduledAt,
-      sentAt: domain.sentAt,
-    });
-    const saved = await this.orm.save(entity);
-    return this.toDomain(saved);
-  }
-
   async save(domain: MessageDomain): Promise<MessageDomain> {
     const entity = this.orm.create({
       id: domain.id,

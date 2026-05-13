@@ -39,8 +39,9 @@ export class UserRepository implements IUserRepository {
     return entity ? this.toDomain(entity) : null;
   }
 
-  async create(domain: UserDomain): Promise<UserDomain> {
+  async save(domain: UserDomain): Promise<UserDomain> {
     const entity = this.orm.create({
+      id: domain.id,
       email: domain.email,
       nickname: domain.nickname,
       tag: domain.tag,
@@ -50,15 +51,5 @@ export class UserRepository implements IUserRepository {
     });
     const saved = await this.orm.save(entity);
     return this.toDomain(saved);
-  }
-
-  async save(domain: UserDomain): Promise<void> {
-    await this.orm.update(domain.id!, {
-      email: domain.email,
-      nickname: domain.nickname,
-      passwordHash: domain.passwordHash,
-      emailVerified: domain.emailVerified,
-      otp: domain.otp,
-    });
   }
 }

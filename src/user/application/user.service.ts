@@ -31,7 +31,7 @@ export class UserService {
   }
 
   create(data: Parameters<typeof UserFactory.create>[0]): Promise<UserDomain> {
-    return this.userRepository.create(UserFactory.create(data));
+    return this.userRepository.save(UserFactory.create(data));
   }
 
   async update(

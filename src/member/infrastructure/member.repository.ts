@@ -37,19 +37,6 @@ export class MemberRepository implements IMemberRepository {
     return entity ? this.toDomain(entity) : null;
   }
 
-  async create(domain: MemberDomain): Promise<MemberDomain> {
-    const entity = this.orm.create({
-      chatId: domain.chatId,
-      userId: domain.userId,
-      role: domain.role,
-      permissions: domain.permissions,
-      bannedAt: domain.bannedAt,
-      leftAt: domain.leftAt,
-    });
-    const saved = await this.orm.save(entity);
-    return this.toDomain(saved);
-  }
-
   async save(domain: MemberDomain): Promise<MemberDomain> {
     const entity = this.orm.create({
       id: domain.id,

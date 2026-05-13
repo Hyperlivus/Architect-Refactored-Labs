@@ -27,7 +27,7 @@ export class MessageService {
       chatId,
       memberId: member.id!,
     });
-    return this.messageRepository.create(data);
+    return this.messageRepository.save(data);
   }
 
   async list(
