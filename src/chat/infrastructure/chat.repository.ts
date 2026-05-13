@@ -31,16 +31,6 @@ export class ChatRepository implements IChatRepository {
     return entity ? this.toDomain(entity) : null;
   }
 
-  async create(domain: ChatDomain): Promise<ChatDomain> {
-    const entity = this.orm.create({
-      name: domain.name,
-      tag: domain.tag,
-      description: domain.description,
-    });
-    const saved = await this.orm.save(entity);
-    return this.toDomain(saved);
-  }
-
   async save(domain: ChatDomain): Promise<ChatDomain> {
     const entity = this.orm.create({
       id: domain.id,

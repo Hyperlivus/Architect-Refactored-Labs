@@ -43,7 +43,7 @@ export class MemberService {
   }
 
   async createOwner(chatId: number, userId: number): Promise<MemberDomain> {
-    return this.memberRepository.create(
+    return this.memberRepository.save(
       MemberFactory.createOwner(chatId, userId),
     );
   }
@@ -91,7 +91,7 @@ export class MemberService {
 
     if (existing) throw new AlreadyMemberError();
 
-    return this.memberRepository.create(data);
+    return this.memberRepository.save(data);
   }
 
   async ban(

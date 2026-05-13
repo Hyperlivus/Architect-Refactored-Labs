@@ -8,6 +8,5 @@ export interface IMemberRepository {
     chatId: number,
     userId: number,
   ): Promise<MemberDomain | null>;
-  create(domain: MemberDomain): Promise<MemberDomain>;
   save(domain: MemberDomain): Promise<MemberDomain>;
 }
