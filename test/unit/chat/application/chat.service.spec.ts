@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ChatService } from './chat.service';
+import { ChatService } from '../../../../src/chat/application/chat.service';
 import {
   CHAT_REPOSITORY,
   IChatRepository,
-} from '../domain/chat.repository.interface';
-import { ChatDomain } from '../domain/chat.domain';
-import { ChatNotFoundError, ChatTagTakenError } from '../domain/chat.errors';
-import { InsufficientPermissionsError } from '../../member/domain/member.errors';
-import { MemberService } from '../../member/application/member.service';
-import { MemberDomain } from '../../member/domain/member.domain';
-import { DEFAULT_PERMISSIONS, Role } from '../../member/domain/member.enum';
+} from '../../../../src/chat/domain/chat.repository.interface';
+import { ChatDomain } from '../../../../src/chat/domain/chat.domain';
+import { ChatNotFoundError, ChatTagTakenError } from '../../../../src/chat/domain/chat.errors';
+import { InsufficientPermissionsError } from '../../../../src/member/domain/member.errors';
+import { MemberService } from '../../../../src/member/application/member.service';
+import { MemberDomain } from '../../../../src/member/domain/member.domain';
+import { DEFAULT_PERMISSIONS, Role } from '../../../../src/member/domain/member.enum';
 
 const mockChatRepo: Partial<IChatRepository> = {
   findByTag: jest.fn(),

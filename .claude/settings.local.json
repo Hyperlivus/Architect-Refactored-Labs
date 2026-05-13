@@ -12,7 +12,9 @@
       "Bash(sed -n '1,25p' src/message/application/message.service.ts)",
       "Bash(sed -n '1,15p' src/user/application/user.service.ts)",
       "Bash(rm:*)",
-      "Bash(grep -v \"^$\")"
+      "Bash(grep -v \"^$\")",
+      "Bash(npm install:*)",
+      "Bash(node -e ':*)"
     ]
   }
 }

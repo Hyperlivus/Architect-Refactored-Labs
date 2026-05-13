@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UserService } from './user.service';
+import { UserService } from '../../../../src/user/application/user.service';
 import {
   USER_REPOSITORY,
   IUserRepository,
-} from '../domain/user.repository.interface';
-import { UserDomain } from '../domain/user.domain';
+} from '../../../../src/user/domain/user.repository.interface';
+import { UserDomain } from '../../../../src/user/domain/user.domain';
 
 const mockUserRepo: Partial<IUserRepository> = {
   findById: jest.fn(),

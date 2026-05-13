@@ -10,7 +10,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { MemberService } from '../application/member.service';
+import { CommandBus } from '@nestjs/cqrs';
 import { MemberGuard } from './member.guard';
 import { RequiresPermission } from './requires-permission.decorator';
 import {
@@ -21,12 +21,18 @@ import {
 import { Permission } from '../domain/member.enum';
 import { JwtAuthGuard } from '../../shared/jwt-auth.guard';
 import { CurrentMember } from '../../shared/current-member.decorator';
+import { AddMemberCommand } from '../application/commands/add-member.command';
+import { BanMemberCommand } from '../application/commands/ban-member.command';
+import { UnbanMemberCommand } from '../application/commands/unban-member.command';
+import { LeaveChatCommand } from '../application/commands/leave-chat.command';
+import { UpdateMemberPermissionsCommand } from '../application/commands/update-member-permissions.command';
+import { UpdateMemberRoleCommand } from '../application/commands/update-member-role.command';
 import type { MemberDomain } from '../domain/member.domain';
 
 @Controller('chat/:chatId/members')
 @UseGuards(JwtAuthGuard, MemberGuard)
 export class MemberController {
-  constructor(private readonly memberService: MemberService) {}
+  constructor(private readonly commandBus: CommandBus) {}
 
   @Post()
   @RequiresPermission(Permission.ADD_MEMBERS)
@@ -35,31 +41,46 @@ export class MemberController {
     @Body() dto: AddMemberDto,
     @CurrentMember() requesting: MemberDomain,
   ) {
-    return this.memberService.addMember(chatId, dto, requesting);
+    return this.commandBus.execute(
+      new AddMemberCommand(
+        chatId,
+        dto.userId,
+        requesting.id!,
+        dto.role,
+        dto.permissions,
+      ),
+    );
   }
 
   @Patch(':memberId/permissions')
   @RequiresPermission(Permission.EDIT_PERMISSIONS)
-  async updatePermissions(
+  updatePermissions(
     @Param('chatId', ParseIntPipe) chatId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
     @Body() dto: UpdatePermissionsDto,
     @CurrentMember() requesting: MemberDomain,
   ) {
-    const target = await this.memberService.getTargetMember(chatId, memberId);
-    return this.memberService.updatePermissions(target, dto, requesting);
+    return this.commandBus.execute(
+      new UpdateMemberPermissionsCommand(
+        chatId,
+        memberId,
+        dto.permissions,
+        requesting.id!,
+      ),
+    );
   }
 
   @Patch(':memberId/role')
   @RequiresPermission(Permission.EDIT_PERMISSIONS)
-  async updateRole(
+  updateRole(
     @Param('chatId', ParseIntPipe) chatId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
     @Body() dto: UpdateRoleDto,
     @CurrentMember() requesting: MemberDomain,
   ) {
-    const target = await this.memberService.getTargetMember(chatId, memberId);
-    return this.memberService.updateRole(target, dto, requesting);
+    return this.commandBus.execute(
+      new UpdateMemberRoleCommand(chatId, memberId, dto.role, requesting.id!),
+    );
   }
 
   @Patch(':memberId/ban')
@@ -69,8 +90,9 @@ export class MemberController {
     @Param('memberId', ParseIntPipe) memberId: number,
     @CurrentMember() requesting: MemberDomain,
   ) {
-    const target = await this.memberService.getTargetMember(chatId, memberId);
-    await this.memberService.ban(target, requesting);
+    await this.commandBus.execute(
+      new BanMemberCommand(chatId, memberId, requesting.id!),
+    );
     return { message: 'Member banned' };
   }
 
@@ -81,15 +103,16 @@ export class MemberController {
     @Param('memberId', ParseIntPipe) memberId: number,
     @CurrentMember() requesting: MemberDomain,
   ) {
-    const target = await this.memberService.getTargetMember(chatId, memberId);
-    await this.memberService.unban(target, requesting);
+    await this.commandBus.execute(
+      new UnbanMemberCommand(chatId, memberId, requesting.id!),
+    );
     return { message: 'Member unbanned' };
   }
 
   @Delete('leave')
   @HttpCode(HttpStatus.OK)
   async leave(@CurrentMember() member: MemberDomain) {
-    await this.memberService.leave(member);
+    await this.commandBus.execute(new LeaveChatCommand(member.id!));
     return { message: 'Left the chat' };
   }
 }

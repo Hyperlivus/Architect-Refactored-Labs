@@ -1,19 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { MemberService } from './member.service';
+import { MemberService } from '../../../../src/member/application/member.service';
 import {
   MEMBER_REPOSITORY,
   IMemberRepository,
-} from '../domain/member.repository.interface';
-import { MemberDomain } from '../domain/member.domain';
-import { DEFAULT_PERMISSIONS, Permission, Role } from '../domain/member.enum';
+} from '../../../../src/member/domain/member.repository.interface';
+import { MemberDomain } from '../../../../src/member/domain/member.domain';
+import { DEFAULT_PERMISSIONS, Permission, Role } from '../../../../src/member/domain/member.enum';
 import {
   AlreadyMemberError,
   InsufficientPermissionsError,
   MemberBannedError,
   MemberNotFoundError,
-} from '../domain/member.errors';
-import { UserService } from '../../user/application/user.service';
-import { UserNotFoundError } from '../../user/domain/user.errors';
+} from '../../../../src/member/domain/member.errors';
+import { UserService } from '../../../../src/user/application/user.service';
+import { UserNotFoundError } from '../../../../src/user/domain/user.errors';
 
 const mockMemberRepo: Partial<IMemberRepository> = {
   findByChatAndUser: jest.fn(),

@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
-import { AuthService } from './auth.service';
-import { UserService } from '../../user/application/user.service';
-import { MAIL_SERVICE } from '../../mail/mail.service.interface';
-import { UserAlreadyExistsError } from '../../user/domain/user.errors';
+import { AuthService } from '../../../../src/auth/application/auth.service';
+import { UserService } from '../../../../src/user/application/user.service';
+import { MAIL_SERVICE } from '../../../../src/mail/mail.service.interface';
+import { UserAlreadyExistsError } from '../../../../src/user/domain/user.errors';
 import {
   EmailNotVerifiedError,
   InvalidCredentialsError,
   InvalidOtpError,
-} from '../domain/auth.errors';
-import { UserDomain } from '../../user/domain/user.domain';
+} from '../../../../src/auth/domain/auth.errors';
+import { UserDomain } from '../../../../src/user/domain/user.domain';
 
 jest.mock('bcrypt', () => ({
   hash: jest.fn(),

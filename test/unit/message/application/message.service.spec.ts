@@ -1,14 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { MessageService } from './message.service';
+import { MessageService } from '../../../../src/message/application/message.service';
 import {
   MESSAGE_REPOSITORY,
   IMessageRepository,
-} from '../domain/message.repository.interface';
-import { MessageDomain } from '../domain/message.domain';
-import { MessageNotFoundError } from '../domain/message.errors';
-import { InsufficientPermissionsError } from '../../member/domain/member.errors';
-import { MemberDomain } from '../../member/domain/member.domain';
-import { Permission, Role } from '../../member/domain/member.enum';
+} from '../../../../src/message/domain/message.repository.interface';
+import { MessageDomain } from '../../../../src/message/domain/message.domain';
+import { MessageNotFoundError } from '../../../../src/message/domain/message.errors';
+import { InsufficientPermissionsError } from '../../../../src/member/domain/member.errors';
+import { MemberDomain } from '../../../../src/member/domain/member.domain';
+import { Permission, Role } from '../../../../src/member/domain/member.enum';
 
 const mockMessageRepo: Partial<IMessageRepository> = {
   findActiveById: jest.fn(),
