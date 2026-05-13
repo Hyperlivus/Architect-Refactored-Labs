@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx jest:*)",
+      "Bash(rm -f src/chat/chat.domain.ts src/chat/chat.errors.ts src/chat/chat.factory.ts src/chat/chat.dto.ts src/chat/chat.service.ts src/chat/chat.service.spec.ts src/chat/chat.entity.ts src/chat/chat.controller.ts src/member/member.domain.ts src/member/member.domain.spec.ts src/member/member.enum.ts src/member/member.errors.ts src/member/member.factory.ts src/member/member.dto.ts src/member/member.service.ts src/member/member.service.spec.ts src/member/member.entity.ts src/member/member.controller.ts src/member/member.guard.ts src/member/member.guard.spec.ts src/member/requires-permission.decorator.ts src/message/message.domain.ts src/message/message.errors.ts src/message/message.factory.ts src/message/message.dto.ts src/message/message.service.ts src/message/message.service.spec.ts src/message/message.entity.ts src/message/message.controller.ts src/user/user.domain.ts src/user/user.errors.ts src/user/user.factory.ts src/user/user.service.ts src/user/user.service.spec.ts src/user/user.entity.ts src/user/user.controller.ts)",
+      "Bash(rm -rf src/chat/repository src/member/repository src/message/repository src/user/repository)",
+      "Bash(npx eslint:*)",
+      "Bash(xargs grep:*)",
+      "Bash(npx tsc:*)",
+      "Bash(sed -n '1,25p' src/chat/application/chat.service.ts)",
+      "Bash(sed -n '1,25p' src/member/application/member.service.ts)",
+      "Bash(sed -n '1,25p' src/message/application/message.service.ts)",
+      "Bash(sed -n '1,15p' src/user/application/user.service.ts)",
+      "Bash(rm:*)",
+      "Bash(grep -v \"^$\")"
+    ]
+  }
+}

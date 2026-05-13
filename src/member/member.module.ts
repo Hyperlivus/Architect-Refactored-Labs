@@ -1,14 +1,20 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Member } from './member.entity';
-import { MemberService } from './member.service';
-import { MemberGuard } from './member.guard';
-import { MemberController } from './member.controller';
+import { Member } from './infrastructure/member.entity';
+import { MemberRepository } from './infrastructure/member.repository';
+import { MEMBER_REPOSITORY } from './domain/member.repository.interface';
+import { MemberService } from './application/member.service';
+import { MemberGuard } from './presentation/member.guard';
+import { MemberController } from './presentation/member.controller';
 import { UserModule } from '../user/user.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Member]), UserModule],
-  providers: [MemberService, MemberGuard],
+  providers: [
+    { provide: MEMBER_REPOSITORY, useClass: MemberRepository },
+    MemberService,
+    MemberGuard,
+  ],
   controllers: [MemberController],
   exports: [MemberService, MemberGuard],
 })

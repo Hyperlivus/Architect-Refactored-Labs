@@ -3,18 +3,18 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { AuthController } from '../src/auth/auth.controller';
-import { AuthService } from '../src/auth/auth.service';
-import { UserController } from '../src/user/user.controller';
-import { UserService } from '../src/user/user.service';
+import { AuthController } from '../src/auth/presentation/auth.controller';
+import { AuthService } from '../src/auth/application/auth.service';
+import { UserController } from '../src/user/presentation/user.controller';
+import { UserService } from '../src/user/application/user.service';
 import { JwtAuthGuard } from '../src/shared/jwt-auth.guard';
 import { DomainExceptionFilter } from '../src/shared/domain-exception.filter';
 import {
   EmailNotVerifiedError,
   InvalidCredentialsError,
   InvalidOtpError,
-} from '../src/auth/auth.errors';
-import { UserAlreadyExistsError } from '../src/user/user.errors';
+} from '../src/auth/domain/auth.errors';
+import { UserAlreadyExistsError } from '../src/user/domain/user.errors';
 
 const JWT_SECRET = 'test-secret';
 
@@ -25,7 +25,7 @@ const mockAuthService = {
   requestNewOtp: jest.fn(),
 };
 
-const mockUserService = { findOne: jest.fn() };
+const mockUserService = { findById: jest.fn() };
 
 describe('Auth & User (e2e)', () => {
   let app: INestApplication<App>;
@@ -245,7 +245,7 @@ describe('Auth & User (e2e)', () => {
 
     it('200 — returns user data without sensitive fields', async () => {
       const token = makeToken(1);
-      mockUserService.findOne.mockResolvedValue({
+      mockUserService.findById.mockResolvedValue({
         id: 1,
         email: 'test@test.com',
         nickname: 'Test',
@@ -280,7 +280,7 @@ describe('Auth & User (e2e)', () => {
 
     it('404 — user not found in DB after valid token', async () => {
       const token = makeToken(999);
-      mockUserService.findOne.mockResolvedValue(null);
+      mockUserService.findById.mockResolvedValue(null);
 
       await request(app.getHttpServer())
         .get('/user/me')
