@@ -6,6 +6,8 @@ export class MessageDomain {
     public readonly memberId: number,
     public readonly createdAt: Date | undefined,
     public deletedAt: Date | null,
+    public readonly scheduledAt: Date | null = null,
+    public sentAt: Date | null = null,
   ) {}
 
   isDeleted(): boolean {

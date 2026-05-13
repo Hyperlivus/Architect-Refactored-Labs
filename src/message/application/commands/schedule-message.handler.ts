@@ -5,11 +5,11 @@ import type { IMessageRepository } from '../../domain/message.repository.interfa
 import { MessageFactory } from '../../domain/message.factory';
 import { toMessageReadModel } from '../read-models/message.read-model';
 import type { MessageReadModel } from '../read-models/message.read-model';
-import { SendMessageCommand } from './send-message.command';
+import { ScheduleMessageCommand } from './schedule-message.command';
 
-@CommandHandler(SendMessageCommand)
-export class SendMessageHandler implements ICommandHandler<
-  SendMessageCommand,
+@CommandHandler(ScheduleMessageCommand)
+export class ScheduleMessageHandler implements ICommandHandler<
+  ScheduleMessageCommand,
   MessageReadModel
 > {
   constructor(
@@ -17,13 +17,16 @@ export class SendMessageHandler implements ICommandHandler<
     private readonly messageRepository: IMessageRepository,
   ) {}
 
-  async execute(command: SendMessageCommand): Promise<MessageReadModel> {
-    const { chatId, content, requestingMemberId } = command;
-    const domain = MessageFactory.create({
+  async execute(command: ScheduleMessageCommand): Promise<MessageReadModel> {
+    const { chatId, content, requestingMemberId, scheduledAt } = command;
+
+    const domain = MessageFactory.createScheduled({
       content,
       chatId,
       memberId: requestingMemberId,
+      scheduledAt,
     });
+
     const saved = await this.messageRepository.create(domain);
     return toMessageReadModel(saved);
   }

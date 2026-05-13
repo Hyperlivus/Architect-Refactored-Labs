@@ -6,6 +6,7 @@ import type { IMessageRepository } from '../../../../../src/message/domain/messa
 
 const mockRepo: jest.Mocked<IMessageRepository> = {
   findActiveById: jest.fn(),
+  findPendingScheduled: jest.fn(),
   create: jest.fn(),
   save: jest.fn(),
   list: jest.fn(),

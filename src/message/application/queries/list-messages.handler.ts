@@ -7,10 +7,10 @@ import type { MessageReadModel } from '../read-models/message.read-model';
 import { ListMessagesQuery } from './list-messages.query';
 
 @QueryHandler(ListMessagesQuery)
-export class ListMessagesHandler
-  implements
-    IQueryHandler<ListMessagesQuery, { items: MessageReadModel[]; total: number }>
-{
+export class ListMessagesHandler implements IQueryHandler<
+  ListMessagesQuery,
+  { items: MessageReadModel[]; total: number }
+> {
   constructor(
     @Inject(MESSAGE_REPOSITORY)
     private readonly messageRepository: IMessageRepository,

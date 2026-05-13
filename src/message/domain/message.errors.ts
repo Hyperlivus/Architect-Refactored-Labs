@@ -5,3 +5,9 @@ export class MessageNotFoundError extends DomainError {
     super('Message not found');
   }
 }
+
+export class MessageScheduledInPastError extends DomainError {
+  constructor() {
+    super('Scheduled time must be in the future');
+  }
+}

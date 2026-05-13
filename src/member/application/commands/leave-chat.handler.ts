@@ -6,7 +6,10 @@ import { MemberNotFoundError } from '../../domain/member.errors';
 import { LeaveChatCommand } from './leave-chat.command';
 
 @CommandHandler(LeaveChatCommand)
-export class LeaveChatHandler implements ICommandHandler<LeaveChatCommand, void> {
+export class LeaveChatHandler implements ICommandHandler<
+  LeaveChatCommand,
+  void
+> {
   constructor(
     @Inject(MEMBER_REPOSITORY)
     private readonly memberRepository: IMemberRepository,

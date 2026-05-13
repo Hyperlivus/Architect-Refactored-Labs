@@ -5,11 +5,17 @@ import {
   IChatRepository,
 } from '../../../../src/chat/domain/chat.repository.interface';
 import { ChatDomain } from '../../../../src/chat/domain/chat.domain';
-import { ChatNotFoundError, ChatTagTakenError } from '../../../../src/chat/domain/chat.errors';
+import {
+  ChatNotFoundError,
+  ChatTagTakenError,
+} from '../../../../src/chat/domain/chat.errors';
 import { InsufficientPermissionsError } from '../../../../src/member/domain/member.errors';
 import { MemberService } from '../../../../src/member/application/member.service';
 import { MemberDomain } from '../../../../src/member/domain/member.domain';
-import { DEFAULT_PERMISSIONS, Role } from '../../../../src/member/domain/member.enum';
+import {
+  DEFAULT_PERMISSIONS,
+  Role,
+} from '../../../../src/member/domain/member.enum';
 
 const mockChatRepo: Partial<IChatRepository> = {
   findByTag: jest.fn(),

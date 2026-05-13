@@ -37,15 +37,17 @@ describe('GetCurrentUserHandler (integration)', () => {
       tag: 'alice',
       emailVerified: true,
     });
-    expect((result as Record<string, unknown>).passwordHash).toBeUndefined();
-    expect((result as Record<string, unknown>).otp).toBeUndefined();
+    expect(
+      (result as unknown as Record<string, unknown>).passwordHash,
+    ).toBeUndefined();
+    expect((result as unknown as Record<string, unknown>).otp).toBeUndefined();
   });
 
   it('should throw UserNotFoundError when user does not exist', async () => {
     mockRepo.findById.mockResolvedValue(null);
 
-    await expect(
-      handler.execute(new GetCurrentUserQuery(999)),
-    ).rejects.toThrow(UserNotFoundError);
+    await expect(handler.execute(new GetCurrentUserQuery(999))).rejects.toThrow(
+      UserNotFoundError,
+    );
   });
 });

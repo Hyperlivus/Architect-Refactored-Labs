@@ -18,9 +18,10 @@ import { RequiresPermission } from '../../member/presentation/requires-permissio
 import { Permission } from '../../member/domain/member.enum';
 import { CurrentMember } from '../../shared/current-member.decorator';
 import { PaginationDto } from '../../shared/pagination.dto';
-import { SendMessageDto } from '../application/message.dto';
+import { SendMessageDto, ScheduleMessageDto } from '../application/message.dto';
 import { SendMessageCommand } from '../application/commands/send-message.command';
 import { DeleteMessageCommand } from '../application/commands/delete-message.command';
+import { ScheduleMessageCommand } from '../application/commands/schedule-message.command';
 import { ListMessagesQuery } from '../application/queries/list-messages.query';
 import type { MemberDomain } from '../../member/domain/member.domain';
 
@@ -51,6 +52,23 @@ export class MessageController {
   ) {
     return this.queryBus.execute(
       new ListMessagesQuery(chatId, pagination.page, pagination.limit),
+    );
+  }
+
+  @Post('schedule')
+  @RequiresPermission(Permission.SEND_MESSAGES)
+  schedule(
+    @Param('chatId', ParseIntPipe) chatId: number,
+    @Body() dto: ScheduleMessageDto,
+    @CurrentMember() member: MemberDomain,
+  ) {
+    return this.commandBus.execute(
+      new ScheduleMessageCommand(
+        chatId,
+        dto.content,
+        member.id!,
+        new Date(dto.scheduledAt),
+      ),
     );
   }
 

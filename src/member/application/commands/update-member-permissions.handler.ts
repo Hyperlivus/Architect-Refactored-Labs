@@ -11,9 +11,10 @@ import type { MemberReadModel } from '../read-models/member.read-model';
 import { UpdateMemberPermissionsCommand } from './update-member-permissions.command';
 
 @CommandHandler(UpdateMemberPermissionsCommand)
-export class UpdateMemberPermissionsHandler
-  implements ICommandHandler<UpdateMemberPermissionsCommand, MemberReadModel>
-{
+export class UpdateMemberPermissionsHandler implements ICommandHandler<
+  UpdateMemberPermissionsCommand,
+  MemberReadModel
+> {
   constructor(
     @Inject(MEMBER_REPOSITORY)
     private readonly memberRepository: IMemberRepository,

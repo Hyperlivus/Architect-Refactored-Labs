@@ -5,7 +5,11 @@ import {
   IMemberRepository,
 } from '../../../../src/member/domain/member.repository.interface';
 import { MemberDomain } from '../../../../src/member/domain/member.domain';
-import { DEFAULT_PERMISSIONS, Permission, Role } from '../../../../src/member/domain/member.enum';
+import {
+  DEFAULT_PERMISSIONS,
+  Permission,
+  Role,
+} from '../../../../src/member/domain/member.enum';
 import {
   AlreadyMemberError,
   InsufficientPermissionsError,

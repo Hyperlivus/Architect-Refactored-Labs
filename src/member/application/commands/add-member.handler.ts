@@ -3,7 +3,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { MEMBER_REPOSITORY } from '../../domain/member.repository.interface';
 import type { IMemberRepository } from '../../domain/member.repository.interface';
 import { MemberFactory } from '../../domain/member.factory';
-import { DEFAULT_PERMISSIONS, Role, ROLE_RANK } from '../../domain/member.enum';
+import { Role, ROLE_RANK } from '../../domain/member.enum';
 import {
   AlreadyMemberError,
   InsufficientPermissionsError,
@@ -17,9 +17,10 @@ import type { MemberReadModel } from '../read-models/member.read-model';
 import { AddMemberCommand } from './add-member.command';
 
 @CommandHandler(AddMemberCommand)
-export class AddMemberHandler
-  implements ICommandHandler<AddMemberCommand, MemberReadModel>
-{
+export class AddMemberHandler implements ICommandHandler<
+  AddMemberCommand,
+  MemberReadModel
+> {
   constructor(
     @Inject(MEMBER_REPOSITORY)
     private readonly memberRepository: IMemberRepository,

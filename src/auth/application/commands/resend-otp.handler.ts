@@ -8,7 +8,10 @@ import { otpEmail } from '../auth.email-templates';
 import { ResendOtpCommand } from './resend-otp.command';
 
 @CommandHandler(ResendOtpCommand)
-export class ResendOtpHandler implements ICommandHandler<ResendOtpCommand, void> {
+export class ResendOtpHandler implements ICommandHandler<
+  ResendOtpCommand,
+  void
+> {
   constructor(
     private readonly userService: UserService,
     @Inject(MAIL_SERVICE) private readonly mailService: IMailService,

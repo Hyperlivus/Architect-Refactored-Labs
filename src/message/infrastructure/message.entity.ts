@@ -24,4 +24,10 @@ export class Message {
 
   @Column({ nullable: true, type: 'timestamp' })
   deletedAt: Date | null;
+
+  @Column({ nullable: true, type: 'timestamp', name: 'scheduled_at' })
+  scheduledAt: Date | null;
+
+  @Column({ nullable: true, type: 'timestamp', name: 'sent_at' })
+  sentAt: Date | null;
 }

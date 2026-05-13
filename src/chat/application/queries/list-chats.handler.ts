@@ -7,10 +7,10 @@ import { toChatReadModel } from '../read-models/chat.read-model';
 import { ListChatsQuery } from './list-chats.query';
 
 @QueryHandler(ListChatsQuery)
-export class ListChatsHandler
-  implements
-    IQueryHandler<ListChatsQuery, { items: ChatReadModel[]; total: number }>
-{
+export class ListChatsHandler implements IQueryHandler<
+  ListChatsQuery,
+  { items: ChatReadModel[]; total: number }
+> {
   constructor(
     @Inject(CHAT_REPOSITORY) private readonly chatRepository: IChatRepository,
   ) {}

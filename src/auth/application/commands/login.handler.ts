@@ -9,9 +9,10 @@ import {
 import { LoginCommand } from './login.command';
 
 @CommandHandler(LoginCommand)
-export class LoginHandler
-  implements ICommandHandler<LoginCommand, { accessToken: string }>
-{
+export class LoginHandler implements ICommandHandler<
+  LoginCommand,
+  { accessToken: string }
+> {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,

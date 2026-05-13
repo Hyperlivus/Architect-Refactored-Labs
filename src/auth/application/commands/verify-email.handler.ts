@@ -8,9 +8,10 @@ import {
 import { VerifyEmailCommand } from './verify-email.command';
 
 @CommandHandler(VerifyEmailCommand)
-export class VerifyEmailHandler
-  implements ICommandHandler<VerifyEmailCommand, { accessToken: string }>
-{
+export class VerifyEmailHandler implements ICommandHandler<
+  VerifyEmailCommand,
+  { accessToken: string }
+> {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,

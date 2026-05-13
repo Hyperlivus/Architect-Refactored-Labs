@@ -10,9 +10,10 @@ import { MemberService } from '../../../member/application/member.service';
 import { DeleteMessageCommand } from './delete-message.command';
 
 @CommandHandler(DeleteMessageCommand)
-export class DeleteMessageHandler
-  implements ICommandHandler<DeleteMessageCommand, void>
-{
+export class DeleteMessageHandler implements ICommandHandler<
+  DeleteMessageCommand,
+  void
+> {
   constructor(
     @Inject(MESSAGE_REPOSITORY)
     private readonly messageRepository: IMessageRepository,
@@ -34,7 +35,9 @@ export class DeleteMessageHandler
       !message.isOwnedBy(requestingMemberId) &&
       !requesting.hasPermission(Permission.DELETE_MESSAGES)
     ) {
-      throw new InsufficientPermissionsError('You can only delete your own messages');
+      throw new InsufficientPermissionsError(
+        'You can only delete your own messages',
+      );
     }
 
     message.delete();

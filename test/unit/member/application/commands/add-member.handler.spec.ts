@@ -1,7 +1,10 @@
 import { AddMemberHandler } from '../../../../../src/member/application/commands/add-member.handler';
 import { AddMemberCommand } from '../../../../../src/member/application/commands/add-member.command';
 import { MemberDomain } from '../../../../../src/member/domain/member.domain';
-import { DEFAULT_PERMISSIONS, Permission, Role } from '../../../../../src/member/domain/member.enum';
+import {
+  DEFAULT_PERMISSIONS,
+  Role,
+} from '../../../../../src/member/domain/member.enum';
 import {
   AlreadyMemberError,
   MemberBannedError,
@@ -9,7 +12,6 @@ import {
 } from '../../../../../src/member/domain/member.errors';
 import { UserNotFoundError } from '../../../../../src/user/domain/user.errors';
 import type { IMemberRepository } from '../../../../../src/member/domain/member.repository.interface';
-import { MEMBER_REPOSITORY } from '../../../../../src/member/domain/member.repository.interface';
 import type { UserService } from '../../../../../src/user/application/user.service';
 
 const mockRepo: jest.Mocked<IMemberRepository> = {
@@ -52,9 +54,7 @@ describe('AddMemberHandler', () => {
     mockRepo.findByChatAndUser.mockResolvedValue(null);
     mockRepo.create.mockResolvedValue(newMember);
 
-    const result = await handler.execute(
-      new AddMemberCommand(5, 200, 1),
-    );
+    const result = await handler.execute(new AddMemberCommand(5, 200, 1));
 
     expect(result.role).toBe(Role.MEMBER);
     expect(mockRepo.create).toHaveBeenCalled();
@@ -66,7 +66,7 @@ describe('AddMemberHandler', () => {
     mockRepo.findById.mockResolvedValue(requesting);
     (mockUserService.findById as jest.Mock).mockResolvedValue({ id: 200 });
     mockRepo.findByChatAndUser.mockResolvedValue(leftMember);
-    mockRepo.save.mockImplementation(async (m) => m);
+    mockRepo.save.mockImplementation((m) => Promise.resolve(m));
 
     const result = await handler.execute(new AddMemberCommand(5, 200, 1));
 

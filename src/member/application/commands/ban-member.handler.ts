@@ -9,7 +9,10 @@ import {
 import { BanMemberCommand } from './ban-member.command';
 
 @CommandHandler(BanMemberCommand)
-export class BanMemberHandler implements ICommandHandler<BanMemberCommand, void> {
+export class BanMemberHandler implements ICommandHandler<
+  BanMemberCommand,
+  void
+> {
   constructor(
     @Inject(MEMBER_REPOSITORY)
     private readonly memberRepository: IMemberRepository,

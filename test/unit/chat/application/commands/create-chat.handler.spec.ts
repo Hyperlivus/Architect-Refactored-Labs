@@ -3,7 +3,6 @@ import { CreateChatCommand } from '../../../../../src/chat/application/commands/
 import { ChatDomain } from '../../../../../src/chat/domain/chat.domain';
 import { ChatTagTakenError } from '../../../../../src/chat/domain/chat.errors';
 import type { IChatRepository } from '../../../../../src/chat/domain/chat.repository.interface';
-import { CHAT_REPOSITORY } from '../../../../../src/chat/domain/chat.repository.interface';
 import type { MemberService } from '../../../../../src/member/application/member.service';
 
 const mockRepo: jest.Mocked<IChatRepository> = {
@@ -14,7 +13,9 @@ const mockRepo: jest.Mocked<IChatRepository> = {
   list: jest.fn(),
 };
 
-const mockMemberService = { createOwner: jest.fn() } as unknown as MemberService;
+const mockMemberService = {
+  createOwner: jest.fn(),
+} as unknown as MemberService;
 
 describe('CreateChatHandler', () => {
   let handler: CreateChatHandler;
@@ -26,7 +27,9 @@ describe('CreateChatHandler', () => {
 
   it('should create chat and return its id', async () => {
     mockRepo.findByTag.mockResolvedValue(null);
-    mockRepo.create.mockResolvedValue(new ChatDomain(1, 'Test Chat', 'testchat', null));
+    mockRepo.create.mockResolvedValue(
+      new ChatDomain(1, 'Test Chat', 'testchat', null),
+    );
     (mockMemberService.createOwner as jest.Mock).mockResolvedValue({});
 
     const id = await handler.execute(

@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Repository } from 'typeorm';
+import { IsNull, LessThanOrEqual, Repository } from 'typeorm';
 import { Message } from './message.entity';
 import { MessageDomain } from '../domain/message.domain';
+import { ScheduledMessageDomain } from '../domain/scheduled-message.domain';
 import type { IMessageRepository } from '../domain/message.repository.interface';
 
 @Injectable()
@@ -13,6 +14,18 @@ export class MessageRepository implements IMessageRepository {
   ) {}
 
   private toDomain(entity: Message): MessageDomain {
+    if (entity.scheduledAt) {
+      return new ScheduledMessageDomain(
+        entity.id,
+        entity.content,
+        entity.chatId,
+        entity.memberId,
+        entity.createdAt,
+        entity.deletedAt,
+        entity.scheduledAt,
+        entity.sentAt,
+      );
+    }
     return new MessageDomain(
       entity.id,
       entity.content,
@@ -32,12 +45,39 @@ export class MessageRepository implements IMessageRepository {
     return this.toDomain(entity);
   }
 
+  async findPendingScheduled(now: Date): Promise<ScheduledMessageDomain[]> {
+    const entities = await this.orm.find({
+      where: {
+        scheduledAt: LessThanOrEqual(now),
+        sentAt: IsNull(),
+        deletedAt: IsNull(),
+      },
+    });
+    return entities
+      .filter((e) => e.scheduledAt !== null)
+      .map(
+        (e) =>
+          new ScheduledMessageDomain(
+            e.id,
+            e.content,
+            e.chatId,
+            e.memberId,
+            e.createdAt,
+            e.deletedAt,
+            e.scheduledAt!,
+            e.sentAt,
+          ),
+      );
+  }
+
   async create(domain: MessageDomain): Promise<MessageDomain> {
     const entity = this.orm.create({
       content: domain.content,
       chatId: domain.chatId,
       memberId: domain.memberId,
       deletedAt: domain.deletedAt,
+      scheduledAt: domain.scheduledAt,
+      sentAt: domain.sentAt,
     });
     const saved = await this.orm.save(entity);
     return this.toDomain(saved);
@@ -51,6 +91,8 @@ export class MessageRepository implements IMessageRepository {
       memberId: domain.memberId,
       createdAt: domain.createdAt,
       deletedAt: domain.deletedAt,
+      scheduledAt: domain.scheduledAt,
+      sentAt: domain.sentAt,
     });
     const saved = await this.orm.save(entity);
     return this.toDomain(saved);

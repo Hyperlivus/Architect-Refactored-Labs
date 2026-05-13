@@ -9,9 +9,10 @@ import {
 import { UnbanMemberCommand } from './unban-member.command';
 
 @CommandHandler(UnbanMemberCommand)
-export class UnbanMemberHandler
-  implements ICommandHandler<UnbanMemberCommand, void>
-{
+export class UnbanMemberHandler implements ICommandHandler<
+  UnbanMemberCommand,
+  void
+> {
   constructor(
     @Inject(MEMBER_REPOSITORY)
     private readonly memberRepository: IMemberRepository,

@@ -23,7 +23,7 @@ describe('UpdateChatHandler', () => {
   it('should update chat name and return read model', async () => {
     const chat = new ChatDomain(1, 'Old Name', 'testchat', null);
     mockRepo.findById.mockResolvedValue(chat);
-    mockRepo.save.mockImplementation(async (c) => c);
+    mockRepo.save.mockImplementation((c) => Promise.resolve(c));
 
     const result = await handler.execute(
       new UpdateChatCommand(1, 'New Name', undefined),

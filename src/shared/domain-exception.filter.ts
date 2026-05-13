@@ -16,6 +16,7 @@ const ERROR_STATUS: Record<string, number> = {
   // Message
   MessageNotFoundError: 404,
   InvalidMessageDataError: 422,
+  MessageScheduledInPastError: 422,
   // User
   UserNotFoundError: 404,
   UserAlreadyExistsError: 409,

@@ -8,9 +8,10 @@ import type { UserReadModel } from '../read-models/user.read-model';
 import { GetCurrentUserQuery } from './get-current-user.query';
 
 @QueryHandler(GetCurrentUserQuery)
-export class GetCurrentUserHandler
-  implements IQueryHandler<GetCurrentUserQuery, UserReadModel>
-{
+export class GetCurrentUserHandler implements IQueryHandler<
+  GetCurrentUserQuery,
+  UserReadModel
+> {
   constructor(
     @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
   ) {}
