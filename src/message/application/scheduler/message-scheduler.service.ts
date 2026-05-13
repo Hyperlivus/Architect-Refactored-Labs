@@ -26,18 +26,25 @@ export class MessageSchedulerService {
     this.logger.log(`Processing ${pending.length} scheduled message(s)`);
 
     for (const message of pending) {
-      message.deliver();
-      await this.messageRepository.save(message);
+      try {
+        message.deliver();
+        await this.messageRepository.save(message);
 
-      this.eventBus.publish(
-        new ScheduledMessageDeliveredEvent(
-          message.id!,
-          message.chatId,
-          message.memberId,
-          message.content,
-          message.sentAt!,
-        ),
-      );
+        this.eventBus.publish(
+          new ScheduledMessageDeliveredEvent(
+            message.id!,
+            message.chatId,
+            message.memberId,
+            message.content,
+            message.sentAt!,
+          ),
+        );
+      } catch (err) {
+        this.logger.error(
+          `Failed to process scheduled message #${message.id}`,
+          err,
+        );
+      }
     }
   }
 }

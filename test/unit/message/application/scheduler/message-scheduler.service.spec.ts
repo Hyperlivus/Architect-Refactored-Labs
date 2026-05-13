@@ -77,9 +77,7 @@ describe('MessageSchedulerService', () => {
       .mockRejectedValueOnce(new Error('DB error'))
       .mockImplementation((m) => Promise.resolve(m));
 
-    await expect(service.processScheduledMessages()).rejects.toThrow(
-      'DB error',
-    );
-    expect(mockEventBus.publish).toHaveBeenCalledTimes(0);
+    await expect(service.processScheduledMessages()).resolves.not.toThrow();
+    expect(mockEventBus.publish).toHaveBeenCalledTimes(1);
   });
 });
