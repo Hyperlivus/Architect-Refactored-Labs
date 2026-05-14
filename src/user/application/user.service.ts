@@ -34,19 +34,31 @@ export class UserService {
     return this.userRepository.create(UserFactory.create(data));
   }
 
-  async update(
-    id: number,
-    data: Partial<
-      Pick<UserDomain, 'emailVerified' | 'otp' | 'passwordHash' | 'nickname'>
-    >,
-  ): Promise<void> {
+  async setOtp(id: number, otp: string): Promise<void> {
     const user = await this.userRepository.findById(id);
     if (!user) return;
-    if (data.nickname !== undefined) user.updateNickname(data.nickname);
-    if (data.emailVerified !== undefined)
-      user.emailVerified = data.emailVerified;
-    if (data.otp !== undefined) user.otp = data.otp;
-    if (data.passwordHash !== undefined) user.updatePassword(data.passwordHash);
+    user.setOtp(otp);
+    await this.userRepository.save(user);
+  }
+
+  async verifyEmail(id: number): Promise<void> {
+    const user = await this.userRepository.findById(id);
+    if (!user) return;
+    user.verifyEmail();
+    await this.userRepository.save(user);
+  }
+
+  async updatePassword(id: number, passwordHash: string): Promise<void> {
+    const user = await this.userRepository.findById(id);
+    if (!user) return;
+    user.updatePassword(passwordHash);
+    await this.userRepository.save(user);
+  }
+
+  async updateNickname(id: number, nickname: string): Promise<void> {
+    const user = await this.userRepository.findById(id);
+    if (!user) return;
+    user.updateNickname(nickname);
     await this.userRepository.save(user);
   }
 }
