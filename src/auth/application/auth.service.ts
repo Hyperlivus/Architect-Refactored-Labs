@@ -51,7 +51,7 @@ export class AuthService {
     });
 
     const otp = this.generateOtp();
-    await this.userService.update(user.id!, { otp });
+    await this.userService.setOtp(user.id!, otp);
     await this.mailService.send(otpEmail(user.email, otp));
   }
 
@@ -72,7 +72,7 @@ export class AuthService {
     if (!user) throw new InvalidCredentialsError();
     if (!user.otp || user.otp !== dto.otp) throw new InvalidOtpError();
 
-    await this.userService.update(user.id!, { emailVerified: true, otp: null });
+    await this.userService.verifyEmail(user.id!);
 
     return { accessToken: this.sign(user.id!, user.email) };
   }
@@ -82,7 +82,7 @@ export class AuthService {
     if (!user) throw new InvalidCredentialsError();
 
     const otp = this.generateOtp();
-    await this.userService.update(user.id!, { otp });
+    await this.userService.setOtp(user.id!, otp);
     await this.mailService.send(otpEmail(user.email, otp));
   }
 }
