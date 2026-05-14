@@ -5,30 +5,35 @@ export class MemberDomain {
     public readonly id: number | undefined,
     public readonly userId: number,
     public readonly chatId: number,
-    public role: Role,
-    public permissions: Permission[],
-    public bannedAt: Date | null,
-    public leftAt: Date | null,
+    private _role: Role,
+    private _permissions: Permission[],
+    private _bannedAt: Date | null,
+    private _leftAt: Date | null,
   ) {}
+
+  get role(): Role { return this._role; }
+  get permissions(): Permission[] { return this._permissions; }
+  get bannedAt(): Date | null { return this._bannedAt; }
+  get leftAt(): Date | null { return this._leftAt; }
 
   hasPermission(permission: Permission): boolean {
     return (
-      this.role === Role.SUPER_ADMIN || this.permissions.includes(permission)
+      this._role === Role.SUPER_ADMIN || this._permissions.includes(permission)
     );
   }
 
   canActOn(target: MemberDomain): boolean {
     if (this.id === target.id) return false;
-    if (this.role === Role.SUPER_ADMIN) return true;
-    return ROLE_RANK[this.role] > ROLE_RANK[target.role];
+    if (this._role === Role.SUPER_ADMIN) return true;
+    return ROLE_RANK[this._role] > ROLE_RANK[target._role];
   }
 
   isBanned(): boolean {
-    return this.bannedAt !== null;
+    return this._bannedAt !== null;
   }
 
   hasLeft(): boolean {
-    return this.leftAt !== null;
+    return this._leftAt !== null;
   }
 
   isActive(): boolean {
@@ -36,19 +41,29 @@ export class MemberDomain {
   }
 
   ban(): void {
-    this.bannedAt = new Date();
+    this._bannedAt = new Date();
   }
 
   unban(): void {
-    this.bannedAt = null;
+    this._bannedAt = null;
   }
 
   leave(): void {
-    this.leftAt = new Date();
+    this._leftAt = new Date();
   }
 
   setRole(role: Role, permissions: Permission[]): void {
-    this.role = role;
-    this.permissions = permissions;
+    this._role = role;
+    this._permissions = permissions;
+  }
+
+  updatePermissions(permissions: Permission[]): void {
+    this._permissions = permissions;
+  }
+
+  rejoin(role: Role, permissions: Permission[]): void {
+    this._leftAt = null;
+    this._role = role;
+    this._permissions = permissions;
   }
 }

@@ -83,9 +83,7 @@ export class MemberService {
     });
 
     if (existing?.hasLeft()) {
-      existing.leftAt = null;
-      existing.role = data.role;
-      existing.permissions = data.permissions;
+      existing.rejoin(data.role, data.permissions);
       return this.memberRepository.save(existing);
     }
 
@@ -148,7 +146,7 @@ export class MemberService {
       );
     }
 
-    targetMember.permissions = dto.permissions;
+    targetMember.updatePermissions(dto.permissions);
     return this.memberRepository.save(targetMember);
   }
 

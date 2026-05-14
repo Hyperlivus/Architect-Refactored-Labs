@@ -5,11 +5,13 @@ export class MessageDomain {
     public readonly chatId: number,
     public readonly memberId: number,
     public readonly createdAt: Date | undefined,
-    public deletedAt: Date | null,
+    private _deletedAt: Date | null,
   ) {}
 
+  get deletedAt(): Date | null { return this._deletedAt; }
+
   isDeleted(): boolean {
-    return this.deletedAt !== null;
+    return this._deletedAt !== null;
   }
 
   isOwnedBy(memberId: number): boolean {
@@ -17,6 +19,6 @@ export class MessageDomain {
   }
 
   delete(): void {
-    this.deletedAt = new Date();
+    this._deletedAt = new Date();
   }
 }

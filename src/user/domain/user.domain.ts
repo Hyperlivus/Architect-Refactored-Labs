@@ -3,29 +3,48 @@ import { InvalidUserDataError } from './user.errors';
 export class UserDomain {
   constructor(
     public readonly id: number | undefined,
-    public email: string,
-    public nickname: string,
+    private _email: string,
+    private _nickname: string,
     public readonly tag: string,
-    public passwordHash: string,
-    public emailVerified: boolean,
-    public otp: string | null,
+    private _passwordHash: string,
+    private _emailVerified: boolean,
+    private _otp: string | null,
   ) {}
 
+  get email(): string {
+    return this._email;
+  }
+  get nickname(): string {
+    return this._nickname;
+  }
+  get passwordHash(): string {
+    return this._passwordHash;
+  }
+  get emailVerified(): boolean {
+    return this._emailVerified;
+  }
+  get otp(): string | null {
+    return this._otp;
+  }
+
   verifyEmail(): void {
-    this.emailVerified = true;
-    this.otp = null;
+    this._emailVerified = true;
+    this._otp = null;
   }
 
   setOtp(otp: string): void {
-    this.otp = otp;
+    if (!/^\d{6}$/.test(otp)) {
+      throw new InvalidUserDataError('OTP must be exactly 6 digits');
+    }
+    this._otp = otp;
   }
 
   clearOtp(): void {
-    this.otp = null;
+    this._otp = null;
   }
 
   updatePassword(passwordHash: string): void {
-    this.passwordHash = passwordHash;
+    this._passwordHash = passwordHash;
   }
 
   updateNickname(nickname: string): void {
@@ -34,6 +53,6 @@ export class UserDomain {
         'Nickname must be between 2 and 50 characters',
       );
     }
-    this.nickname = nickname;
+    this._nickname = nickname;
   }
 }

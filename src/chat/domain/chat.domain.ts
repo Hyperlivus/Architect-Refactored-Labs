@@ -3,10 +3,13 @@ import { InvalidChatDataError } from './chat.errors';
 export class ChatDomain {
   constructor(
     public readonly id: number | undefined,
-    public name: string,
+    private _name: string,
     public readonly tag: string,
-    public description: string | null,
+    private _description: string | null,
   ) {}
+
+  get name(): string { return this._name; }
+  get description(): string | null { return this._description; }
 
   updateInfo(dto: { name?: string; description?: string | null }): void {
     if (dto.name !== undefined) {
@@ -15,7 +18,7 @@ export class ChatDomain {
           'Chat name must be between 2 and 100 characters',
         );
       }
-      this.name = dto.name;
+      this._name = dto.name;
     }
     if (dto.description !== undefined) {
       if (dto.description && dto.description.length > 500) {
@@ -23,7 +26,7 @@ export class ChatDomain {
           'Description must not exceed 500 characters',
         );
       }
-      this.description = dto.description;
+      this._description = dto.description;
     }
   }
 }
