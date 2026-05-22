@@ -10,7 +10,6 @@ const mockUserRepo: Partial<IUserRepository> = {
   findById: jest.fn(),
   findByEmail: jest.fn(),
   findByTag: jest.fn(),
-  create: jest.fn(),
   save: jest.fn(),
 };
 
@@ -74,41 +73,25 @@ describe('UserService', () => {
         tag: 'alice',
         passwordHash: 'hash',
       };
-      const created = new UserDomain(
-        1,
-        'a@a.com',
-        'Alice',
-        'alice',
-        'hash',
-        false,
-        null,
-      );
-      (mockUserRepo.create as jest.Mock).mockResolvedValue(created);
+      const created = new UserDomain(1, 'a@a.com', 'Alice', 'alice', 'hash', false, null);
+      (mockUserRepo.save as jest.Mock).mockResolvedValue(created);
 
       const result = await service.create(data);
 
-      expect(mockUserRepo.create).toHaveBeenCalledWith(
+      expect(mockUserRepo.save).toHaveBeenCalledWith(
         expect.objectContaining({ emailVerified: false, otp: null }),
       );
       expect(result.id).toBe(1);
     });
   });
 
-  describe('update', () => {
-    it('should find user, mutate and persist updated fields', async () => {
-      const user = new UserDomain(
-        1,
-        'test@test.com',
-        'Test',
-        'testuser',
-        'hash',
-        false,
-        null,
-      );
+  describe('setOtp', () => {
+    it('should find user, set OTP and persist', async () => {
+      const user = new UserDomain(1, 'test@test.com', 'Test', 'testuser', 'hash', false, null);
       (mockUserRepo.findById as jest.Mock).mockResolvedValue(user);
       (mockUserRepo.save as jest.Mock).mockResolvedValue(undefined);
 
-      await service.update(1, { otp: '123456' });
+      await service.setOtp(1, '123456');
 
       expect(user.otp).toBe('123456');
       expect(mockUserRepo.save).toHaveBeenCalledWith(user);
@@ -116,7 +99,26 @@ describe('UserService', () => {
 
     it('should do nothing when user is not found', async () => {
       (mockUserRepo.findById as jest.Mock).mockResolvedValue(null);
-      await service.update(999, { otp: '123456' });
+      await service.setOtp(999, '123456');
+      expect(mockUserRepo.save).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('verifyEmail', () => {
+    it('should find user, verify email and persist', async () => {
+      const user = new UserDomain(1, 'test@test.com', 'Test', 'testuser', 'hash', false, '123456');
+      (mockUserRepo.findById as jest.Mock).mockResolvedValue(user);
+      (mockUserRepo.save as jest.Mock).mockResolvedValue(undefined);
+
+      await service.verifyEmail(1);
+
+      expect(user.emailVerified).toBe(true);
+      expect(mockUserRepo.save).toHaveBeenCalledWith(user);
+    });
+
+    it('should do nothing when user is not found', async () => {
+      (mockUserRepo.findById as jest.Mock).mockResolvedValue(null);
+      await service.verifyEmail(999);
       expect(mockUserRepo.save).not.toHaveBeenCalled();
     });
   });

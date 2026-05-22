@@ -22,7 +22,8 @@ const mockUserService = {
   findByTag: jest.fn(),
   findByEmailOrTag: jest.fn(),
   create: jest.fn(),
-  update: jest.fn(),
+  setOtp: jest.fn(),
+  verifyEmail: jest.fn(),
 };
 
 const mockJwtService = { sign: jest.fn().mockReturnValue('jwt-token') };
@@ -81,18 +82,16 @@ describe('AuthService', () => {
       mockUserService.create.mockResolvedValue(
         makeUser({ id: 2, email: dto.email }),
       );
-      mockUserService.update.mockResolvedValue(undefined);
+      mockUserService.setOtp.mockResolvedValue(undefined);
 
       await service.register(dto);
 
       expect(mockUserService.create).toHaveBeenCalledWith(
         expect.objectContaining({ email: dto.email, passwordHash: 'hashed' }),
       );
-      expect(mockUserService.update).toHaveBeenCalledWith(
+      expect(mockUserService.setOtp).toHaveBeenCalledWith(
         2,
-        expect.objectContaining({
-          otp: expect.stringMatching(/^\d{6}$/) as unknown,
-        }),
+        expect.stringMatching(/^\d{6}$/),
       );
       expect(mockMailService.send).toHaveBeenCalledWith(
         expect.objectContaining({ to: dto.email }),
@@ -163,15 +162,12 @@ describe('AuthService', () => {
       mockUserService.findByEmail.mockResolvedValue(
         makeUser({ emailVerified: false, otp: '123456' }),
       );
-      mockUserService.update.mockResolvedValue(undefined);
+      mockUserService.verifyEmail.mockResolvedValue(undefined);
 
       const result = await service.verifyEmail(dto);
 
       expect(result).toEqual({ accessToken: 'jwt-token' });
-      expect(mockUserService.update).toHaveBeenCalledWith(1, {
-        emailVerified: true,
-        otp: null,
-      });
+      expect(mockUserService.verifyEmail).toHaveBeenCalledWith(1);
     });
 
     it('should throw InvalidCredentialsError when user is not found', async () => {
@@ -199,13 +195,14 @@ describe('AuthService', () => {
 
     it('should generate a new OTP and send email', async () => {
       mockUserService.findByEmail.mockResolvedValue(makeUser());
-      mockUserService.update.mockResolvedValue(undefined);
+      mockUserService.setOtp.mockResolvedValue(undefined);
 
       await service.requestNewOtp(dto);
 
-      expect(mockUserService.update).toHaveBeenCalledWith(1, {
-        otp: expect.stringMatching(/^\d{6}$/) as unknown,
-      });
+      expect(mockUserService.setOtp).toHaveBeenCalledWith(
+        1,
+        expect.stringMatching(/^\d{6}$/),
+      );
       expect(mockMailService.send).toHaveBeenCalledWith(
         expect.objectContaining({ to: 'user@test.com' }),
       );

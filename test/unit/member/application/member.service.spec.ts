@@ -18,7 +18,6 @@ import { UserNotFoundError } from '../../../../src/user/domain/user.errors';
 const mockMemberRepo: Partial<IMemberRepository> = {
   findByChatAndUser: jest.fn(),
   findById: jest.fn(),
-  create: jest.fn(),
   save: jest.fn(),
 };
 
@@ -72,11 +71,11 @@ describe('MemberService', () => {
       mockUserService.findById.mockResolvedValue({ id: 2 });
       (mockMemberRepo.findByChatAndUser as jest.Mock).mockResolvedValue(null);
       const newMember = make({ id: 20, userId: 2 });
-      (mockMemberRepo.create as jest.Mock).mockResolvedValue(newMember);
+      (mockMemberRepo.save as jest.Mock).mockResolvedValue(newMember);
 
       const result = await service.addMember(5, { userId: 2 }, requesting);
 
-      expect(mockMemberRepo.create).toHaveBeenCalledWith(
+      expect(mockMemberRepo.save).toHaveBeenCalledWith(
         expect.objectContaining({
           role: Role.MEMBER,
           permissions: DEFAULT_PERMISSIONS[Role.MEMBER],
@@ -88,9 +87,7 @@ describe('MemberService', () => {
     it('should reactivate a previously left member', async () => {
       const leftMember = make({ leftAt: new Date(), userId: 2 });
       mockUserService.findById.mockResolvedValue({ id: 2 });
-      (mockMemberRepo.findByChatAndUser as jest.Mock).mockResolvedValue(
-        leftMember,
-      );
+      (mockMemberRepo.findByChatAndUser as jest.Mock).mockResolvedValue(leftMember);
       (mockMemberRepo.save as jest.Mock).mockImplementation((m: MemberDomain) =>
         Promise.resolve(m),
       );
@@ -144,7 +141,7 @@ describe('MemberService', () => {
       mockUserService.findById.mockResolvedValue({ id: 2 });
       (mockMemberRepo.findByChatAndUser as jest.Mock).mockResolvedValue(null);
       const newAdmin = make({ id: 20, role: Role.ADMIN });
-      (mockMemberRepo.create as jest.Mock).mockResolvedValue(newAdmin);
+      (mockMemberRepo.save as jest.Mock).mockResolvedValue(newAdmin);
 
       const result = await service.addMember(
         5,
