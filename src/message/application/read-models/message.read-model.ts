@@ -1,6 +1,6 @@
 import type { MessageDomain } from '../../domain/message.domain';
 
-export class MessageReadModel {
+export interface MessageReadModel {
   id: number;
   content: string;
   chatId: number;

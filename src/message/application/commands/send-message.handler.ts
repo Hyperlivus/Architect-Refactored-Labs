@@ -23,7 +23,7 @@ export class SendMessageHandler
       chatId,
       memberId: requestingMemberId,
     });
-    const saved = await this.messageRepository.create(domain);
+    const saved = await this.messageRepository.save(domain);
     return toMessageReadModel(saved);
   }
 }

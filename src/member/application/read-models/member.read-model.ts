@@ -1,7 +1,7 @@
 import type { MemberDomain } from '../../domain/member.domain';
 import type { Permission, Role } from '../../domain/member.enum';
 
-export class MemberReadModel {
+export interface MemberReadModel {
   id: number;
   userId: number;
   chatId: number;

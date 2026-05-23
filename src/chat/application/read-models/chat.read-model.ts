@@ -1,6 +1,6 @@
 import type { ChatDomain } from '../../domain/chat.domain';
 
-export class ChatReadModel {
+export interface ChatReadModel {
   id: number;
   name: string;
   tag: string;

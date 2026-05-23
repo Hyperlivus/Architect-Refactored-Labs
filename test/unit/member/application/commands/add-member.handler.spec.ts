@@ -15,7 +15,6 @@ import type { UserService } from '../../../../../src/user/application/user.servi
 const mockRepo: jest.Mocked<IMemberRepository> = {
   findById: jest.fn(),
   findByChatAndUser: jest.fn(),
-  create: jest.fn(),
   save: jest.fn(),
 };
 
@@ -50,14 +49,14 @@ describe('AddMemberHandler', () => {
     mockRepo.findById.mockResolvedValue(requesting);
     (mockUserService.findById as jest.Mock).mockResolvedValue({ id: 200 });
     mockRepo.findByChatAndUser.mockResolvedValue(null);
-    mockRepo.create.mockResolvedValue(newMember);
+    mockRepo.save.mockResolvedValue(newMember);
 
     const result = await handler.execute(
       new AddMemberCommand(5, 200, 1),
     );
 
     expect(result.role).toBe(Role.MEMBER);
-    expect(mockRepo.create).toHaveBeenCalled();
+    expect(mockRepo.save).toHaveBeenCalled();
   });
 
   it('should reactivate a previously left member', async () => {

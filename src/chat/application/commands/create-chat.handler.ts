@@ -23,7 +23,7 @@ export class CreateChatHandler implements ICommandHandler<
     const existing = await this.chatRepository.findByTag(tag);
     if (existing) throw new ChatTagTakenError();
 
-    const chat = await this.chatRepository.create(
+    const chat = await this.chatRepository.save(
       ChatFactory.create({ name, tag, description }),
     );
     await this.memberService.createOwner(chat.id!, userId);

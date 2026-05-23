@@ -19,7 +19,7 @@ export class ResendOtpHandler implements ICommandHandler<ResendOtpCommand, void>
     if (!user) throw new InvalidCredentialsError();
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    await this.userService.update(user.id!, { otp });
+    await this.userService.setOtp(user.id!,otp);
     await this.mailService.send(otpEmail(user.email, otp));
   }
 }

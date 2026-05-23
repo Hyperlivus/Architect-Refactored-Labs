@@ -7,7 +7,6 @@ import type { IChatRepository } from '../../../../../src/chat/domain/chat.reposi
 const mockRepo: jest.Mocked<IChatRepository> = {
   findById: jest.fn(),
   findByTag: jest.fn(),
-  create: jest.fn(),
   save: jest.fn(),
   list: jest.fn(),
 };
