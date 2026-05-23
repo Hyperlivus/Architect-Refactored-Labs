@@ -1,6 +1,6 @@
 import type { UserDomain } from '../../domain/user.domain';
 
-export class UserReadModel {
+export interface UserReadModel {
   id: number;
   email: string;
   nickname: string;
