@@ -14,7 +14,6 @@ import { DEFAULT_PERMISSIONS, Role } from '../../../../src/member/domain/member.
 const mockChatRepo: Partial<IChatRepository> = {
   findByTag: jest.fn(),
   findById: jest.fn(),
-  create: jest.fn(),
   save: jest.fn(),
   list: jest.fn(),
 };
@@ -45,7 +44,7 @@ describe('ChatService', () => {
   describe('create', () => {
     it('should create a chat and assign owner membership', async () => {
       (mockChatRepo.findByTag as jest.Mock).mockResolvedValue(null);
-      (mockChatRepo.create as jest.Mock).mockResolvedValue(mockChat);
+      (mockChatRepo.save as jest.Mock).mockResolvedValue(mockChat);
       mockMemberService.createOwner.mockResolvedValue({});
 
       const result = await service.create(
@@ -53,11 +52,8 @@ describe('ChatService', () => {
         1,
       );
 
-      expect(mockChatRepo.create).toHaveBeenCalled();
-      expect(mockMemberService.createOwner).toHaveBeenCalledWith(
-        mockChat.id,
-        1,
-      );
+      expect(mockChatRepo.save).toHaveBeenCalled();
+      expect(mockMemberService.createOwner).toHaveBeenCalledWith(mockChat.id, 1);
       expect(result).toEqual(mockChat);
     });
 

@@ -12,7 +12,6 @@ import { Permission, Role } from '../../../../src/member/domain/member.enum';
 
 const mockMessageRepo: Partial<IMessageRepository> = {
   findActiveById: jest.fn(),
-  create: jest.fn(),
   save: jest.fn(),
   list: jest.fn(),
 };
@@ -61,11 +60,11 @@ describe('MessageService', () => {
     it('should create and return a message', async () => {
       const member = makeMember();
       const msg = makeMessage();
-      (mockMessageRepo.create as jest.Mock).mockResolvedValue(msg);
+      (mockMessageRepo.save as jest.Mock).mockResolvedValue(msg);
 
       const result = await service.send(5, { content: 'Hello' }, member);
 
-      expect(mockMessageRepo.create).toHaveBeenCalledWith(
+      expect(mockMessageRepo.save).toHaveBeenCalledWith(
         expect.objectContaining({
           content: 'Hello',
           chatId: 5,
