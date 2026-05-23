@@ -9,7 +9,7 @@ import {
 import { MemberDomain } from './member.domain';
 import {
   MEMBER_REPOSITORY,
-  IMemberRepository,
+  type IMemberRepository,
 } from './member.repository.interface';
 import {
   AlreadyMemberError,
