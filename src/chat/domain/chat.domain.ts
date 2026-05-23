@@ -8,8 +8,12 @@ export class ChatDomain {
     private _description: string | null,
   ) {}
 
-  get name(): string { return this._name; }
-  get description(): string | null { return this._description; }
+  get name(): string {
+    return this._name;
+  }
+  get description(): string | null {
+    return this._description;
+  }
 
   updateInfo(dto: { name?: string; description?: string | null }): void {
     if (dto.name !== undefined) {

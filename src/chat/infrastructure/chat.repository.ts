@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Chat } from './chat.entity';
-import { ChatDomain } from '../domain/chat.domain';
+import { ChatMapper } from './chat.mapper';
+import type { ChatDomain } from '../domain/chat.domain';
 import type { IChatRepository } from '../domain/chat.repository.interface';
 
 @Injectable()
@@ -12,44 +13,27 @@ export class ChatRepository implements IChatRepository {
     private readonly orm: Repository<Chat>,
   ) {}
 
-  private toDomain(entity: Chat): ChatDomain {
-    return new ChatDomain(
-      entity.id,
-      entity.name,
-      entity.tag,
-      entity.description,
-    );
-  }
-
   async findById(id: number): Promise<ChatDomain | null> {
     const entity = await this.orm.findOne({ where: { id } });
-    return entity ? this.toDomain(entity) : null;
+    return entity ? ChatMapper.toDomain(entity) : null;
   }
 
   async findByTag(tag: string): Promise<ChatDomain | null> {
     const entity = await this.orm.findOne({ where: { tag } });
-    return entity ? this.toDomain(entity) : null;
+    return entity ? ChatMapper.toDomain(entity) : null;
   }
 
   async create(domain: ChatDomain): Promise<ChatDomain> {
-    const entity = this.orm.create({
-      name: domain.name,
-      tag: domain.tag,
-      description: domain.description,
-    });
-    const saved = await this.orm.save(entity);
-    return this.toDomain(saved);
+    const { id: _id, ...data } = ChatMapper.toEntity(domain);
+    const saved = await this.orm.save(this.orm.create(data));
+    return ChatMapper.toDomain(saved);
   }
 
   async save(domain: ChatDomain): Promise<ChatDomain> {
-    const entity = this.orm.create({
-      id: domain.id,
-      name: domain.name,
-      tag: domain.tag,
-      description: domain.description,
-    });
-    const saved = await this.orm.save(entity);
-    return this.toDomain(saved);
+    const saved = await this.orm.save(
+      this.orm.create(ChatMapper.toEntity(domain)),
+    );
+    return ChatMapper.toDomain(saved);
   }
 
   async list(
@@ -61,6 +45,6 @@ export class ChatRepository implements IChatRepository {
       take,
       order: { id: 'DESC' },
     });
-    return { items: entities.map((e) => this.toDomain(e)), total };
+    return { items: entities.map(ChatMapper.toDomain), total };
   }
 }

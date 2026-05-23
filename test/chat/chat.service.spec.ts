@@ -1,15 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ChatService } from './chat.service';
+import { ChatService } from '../../src/chat/application/chat.service';
 import {
   CHAT_REPOSITORY,
   IChatRepository,
-} from '../domain/chat.repository.interface';
-import { ChatDomain } from '../domain/chat.domain';
-import { ChatNotFoundError, ChatTagTakenError } from '../domain/chat.errors';
-import { InsufficientPermissionsError } from '../../member/domain/member.errors';
-import { MemberService } from '../../member/application/member.service';
-import { MemberDomain } from '../../member/domain/member.domain';
-import { DEFAULT_PERMISSIONS, Role } from '../../member/domain/member.enum';
+} from '../../src/chat/domain/chat.repository.interface';
+import { ChatFactory } from '../../src/chat/domain/chat.factory';
+import { ChatDomain } from '../../src/chat/domain/chat.domain';
+import {
+  ChatNotFoundError,
+  ChatTagTakenError,
+} from '../../src/chat/domain/chat.errors';
+import { InsufficientPermissionsError } from '../../src/member/domain/member.errors';
+import { MemberService } from '../../src/member/application/member.service';
+import { MemberDomain } from '../../src/member/domain/member.domain';
+import { DEFAULT_PERMISSIONS, Role } from '../../src/member/domain/member.enum';
 
 const mockChatRepo: Partial<IChatRepository> = {
   findByTag: jest.fn(),
@@ -17,6 +21,11 @@ const mockChatRepo: Partial<IChatRepository> = {
   create: jest.fn(),
   save: jest.fn(),
   list: jest.fn(),
+};
+
+const mockChatFactory = {
+  create: jest.fn(),
+  edit: jest.fn(),
 };
 
 const mockMemberService = { createOwner: jest.fn() };
@@ -34,6 +43,7 @@ describe('ChatService', () => {
       providers: [
         ChatService,
         { provide: CHAT_REPOSITORY, useValue: mockChatRepo },
+        { provide: ChatFactory, useValue: mockChatFactory },
         { provide: MemberService, useValue: mockMemberService },
       ],
     }).compile();
@@ -44,7 +54,13 @@ describe('ChatService', () => {
 
   describe('create', () => {
     it('should create a chat and assign owner membership', async () => {
-      (mockChatRepo.findByTag as jest.Mock).mockResolvedValue(null);
+      const chatDomain = new ChatDomain(
+        undefined,
+        'Test Chat',
+        'testchat',
+        null,
+      );
+      (mockChatFactory.create as jest.Mock).mockResolvedValue(chatDomain);
       (mockChatRepo.create as jest.Mock).mockResolvedValue(mockChat);
       mockMemberService.createOwner.mockResolvedValue({});
 
@@ -53,7 +69,12 @@ describe('ChatService', () => {
         1,
       );
 
-      expect(mockChatRepo.create).toHaveBeenCalled();
+      expect(mockChatFactory.create).toHaveBeenCalledWith({
+        name: 'Test Chat',
+        tag: 'testchat',
+        description: undefined,
+      });
+      expect(mockChatRepo.create).toHaveBeenCalledWith(chatDomain);
       expect(mockMemberService.createOwner).toHaveBeenCalledWith(
         mockChat.id,
         1,
@@ -62,7 +83,9 @@ describe('ChatService', () => {
     });
 
     it('should throw ChatTagTakenError when tag is already used', async () => {
-      (mockChatRepo.findByTag as jest.Mock).mockResolvedValue(mockChat);
+      (mockChatFactory.create as jest.Mock).mockRejectedValue(
+        new ChatTagTakenError(),
+      );
 
       await expect(
         service.create({ name: 'New', tag: 'testchat' }, 1),
@@ -87,16 +110,21 @@ describe('ChatService', () => {
       const member = makeMember();
       const chat = new ChatDomain(1, 'Test Chat', 'testchat', null);
       const updated = new ChatDomain(1, 'Updated', 'testchat', null);
+      (mockChatFactory.edit as jest.Mock).mockReturnValue(undefined);
       (mockChatRepo.save as jest.Mock).mockResolvedValue(updated);
 
       const result = await service.update(chat, { name: 'Updated' }, member);
 
+      expect(mockChatFactory.edit).toHaveBeenCalledWith(member);
       expect(result.name).toBe('Updated');
       expect(mockChatRepo.save).toHaveBeenCalled();
     });
 
     it('should throw InsufficientPermissionsError when member lacks permission', async () => {
       const member = makeMember(Role.MEMBER);
+      (mockChatFactory.edit as jest.Mock).mockImplementation(() => {
+        throw new InsufficientPermissionsError();
+      });
 
       await expect(
         service.update(mockChat, { name: 'x' }, member),

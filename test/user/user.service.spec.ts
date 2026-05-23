@@ -1,10 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UserService } from './user.service';
+import { UserService } from '../../src/user/application/user.service';
 import {
   USER_REPOSITORY,
   IUserRepository,
-} from '../domain/user.repository.interface';
-import { UserDomain } from '../domain/user.domain';
+} from '../../src/user/domain/user.repository.interface';
+import { UserFactory } from '../../src/user/domain/user.factory';
+import { UserDomain } from '../../src/user/domain/user.domain';
 
 const mockUserRepo: Partial<IUserRepository> = {
   findById: jest.fn(),
@@ -13,6 +14,8 @@ const mockUserRepo: Partial<IUserRepository> = {
   create: jest.fn(),
   save: jest.fn(),
 };
+
+const mockUserFactory = { create: jest.fn() };
 
 const mockUser = new UserDomain(
   1,
@@ -32,6 +35,7 @@ describe('UserService', () => {
       providers: [
         UserService,
         { provide: USER_REPOSITORY, useValue: mockUserRepo },
+        { provide: UserFactory, useValue: mockUserFactory },
       ],
     }).compile();
 
@@ -67,14 +71,23 @@ describe('UserService', () => {
   });
 
   describe('create', () => {
-    it('should validate via factory and delegate to repository', async () => {
-      const data = {
+    it('should delegate to factory then persist via repository', async () => {
+      const params = {
         email: 'a@a.com',
         nickname: 'Alice',
         tag: 'alice',
         passwordHash: 'hash',
       };
-      const created = new UserDomain(
+      const domain = new UserDomain(
+        undefined,
+        'a@a.com',
+        'Alice',
+        'alice',
+        'hash',
+        false,
+        null,
+      );
+      const saved = new UserDomain(
         1,
         'a@a.com',
         'Alice',
@@ -83,19 +96,20 @@ describe('UserService', () => {
         false,
         null,
       );
-      (mockUserRepo.create as jest.Mock).mockResolvedValue(created);
 
-      const result = await service.create(data);
+      mockUserFactory.create.mockResolvedValue(domain);
+      (mockUserRepo.create as jest.Mock).mockResolvedValue(saved);
 
-      expect(mockUserRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ emailVerified: false, otp: null }),
-      );
+      const result = await service.create(params);
+
+      expect(mockUserFactory.create).toHaveBeenCalledWith(params);
+      expect(mockUserRepo.create).toHaveBeenCalledWith(domain);
       expect(result.id).toBe(1);
     });
   });
 
   describe('update', () => {
-    it('should find user, mutate and persist updated fields', async () => {
+    it('should set otp when otp is provided', async () => {
       const user = new UserDomain(
         1,
         'test@test.com',
@@ -111,6 +125,26 @@ describe('UserService', () => {
       await service.update(1, { otp: '123456' });
 
       expect(user.otp).toBe('123456');
+      expect(mockUserRepo.save).toHaveBeenCalledWith(user);
+    });
+
+    it('should verify email and clear otp when emailVerified is true', async () => {
+      const user = new UserDomain(
+        1,
+        'test@test.com',
+        'Test',
+        'testuser',
+        'hash',
+        false,
+        '123456',
+      );
+      (mockUserRepo.findById as jest.Mock).mockResolvedValue(user);
+      (mockUserRepo.save as jest.Mock).mockResolvedValue(undefined);
+
+      await service.update(1, { emailVerified: true, otp: null });
+
+      expect(user.emailVerified).toBe(true);
+      expect(user.otp).toBeNull();
       expect(mockUserRepo.save).toHaveBeenCalledWith(user);
     });
 

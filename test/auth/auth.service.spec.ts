@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
-import { AuthService } from './auth.service';
-import { UserService } from '../../user/application/user.service';
-import { MAIL_SERVICE } from '../../mail/mail.service.interface';
-import { UserAlreadyExistsError } from '../../user/domain/user.errors';
+import { AuthService } from '../../src/auth/application/auth.service';
+import { UserService } from '../../src/user/application/user.service';
+import { MAIL_SERVICE } from '../../src/mail/mail.service.interface';
+import { UserAlreadyExistsError } from '../../src/user/domain/user.errors';
 import {
   EmailNotVerifiedError,
   InvalidCredentialsError,
   InvalidOtpError,
-} from '../domain/auth.errors';
-import { UserDomain } from '../../user/domain/user.domain';
+} from '../../src/auth/domain/auth.errors';
+import { UserDomain } from '../../src/user/domain/user.domain';
 
 jest.mock('bcrypt', () => ({
   hash: jest.fn(),
@@ -19,7 +19,6 @@ import * as bcrypt from 'bcrypt';
 
 const mockUserService = {
   findByEmail: jest.fn(),
-  findByTag: jest.fn(),
   findByEmailOrTag: jest.fn(),
   create: jest.fn(),
   update: jest.fn(),
@@ -69,14 +68,12 @@ describe('AuthService', () => {
   describe('register', () => {
     const dto = {
       email: 'new@test.com',
-      nickname: 'New',
+      nickname: 'NewUser',
       tag: 'newuser',
       password: 'password123',
     };
 
     it('should create user and send OTP email on success', async () => {
-      mockUserService.findByEmail.mockResolvedValue(null);
-      mockUserService.findByTag.mockResolvedValue(null);
       jest.mocked(bcrypt.hash).mockResolvedValue('hashed' as never);
       mockUserService.create.mockResolvedValue(
         makeUser({ id: 2, email: dto.email }),
@@ -99,24 +96,26 @@ describe('AuthService', () => {
       );
     });
 
-    it('should throw UserAlreadyExistsError when email is taken', async () => {
-      mockUserService.findByEmail.mockResolvedValue(makeUser());
-      mockUserService.findByTag.mockResolvedValue(null);
+    it('should propagate UserAlreadyExistsError when email is taken', async () => {
+      jest.mocked(bcrypt.hash).mockResolvedValue('hashed' as never);
+      mockUserService.create.mockRejectedValue(
+        new UserAlreadyExistsError('email'),
+      );
 
       await expect(service.register(dto)).rejects.toThrow(
         UserAlreadyExistsError,
       );
-      expect(mockUserService.create).not.toHaveBeenCalled();
     });
 
-    it('should throw UserAlreadyExistsError when tag is taken', async () => {
-      mockUserService.findByEmail.mockResolvedValue(null);
-      mockUserService.findByTag.mockResolvedValue(makeUser());
+    it('should propagate UserAlreadyExistsError when tag is taken', async () => {
+      jest.mocked(bcrypt.hash).mockResolvedValue('hashed' as never);
+      mockUserService.create.mockRejectedValue(
+        new UserAlreadyExistsError('tag'),
+      );
 
       await expect(service.register(dto)).rejects.toThrow(
         UserAlreadyExistsError,
       );
-      expect(mockUserService.create).not.toHaveBeenCalled();
     });
   });
 

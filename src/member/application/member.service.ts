@@ -1,26 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { MEMBER_REPOSITORY } from '../domain/member.repository.interface';
 import type { IMemberRepository } from '../domain/member.repository.interface';
-import {
-  DEFAULT_PERMISSIONS,
-  Permission,
-  Role,
-  ROLE_RANK,
-} from '../domain/member.enum';
-import {
-  AlreadyMemberError,
-  InsufficientPermissionsError,
-  MemberBannedError,
-  MemberNotFoundError,
-} from '../domain/member.errors';
-import { UserService } from '../../user/application/user.service';
-import { UserNotFoundError } from '../../user/domain/user.errors';
+import { MemberNotFoundError } from '../domain/member.errors';
+import { MemberFactory } from '../domain/member.factory';
 import type {
   AddMemberDto,
   UpdatePermissionsDto,
   UpdateRoleDto,
 } from './member.dto';
-import { MemberFactory } from '../domain/member.factory';
 import type { MemberDomain } from '../domain/member.domain';
 
 @Injectable()
@@ -28,7 +15,7 @@ export class MemberService {
   constructor(
     @Inject(MEMBER_REPOSITORY)
     private readonly memberRepository: IMemberRepository,
-    private readonly userService: UserService,
+    private readonly memberFactory: MemberFactory,
   ) {}
 
   findByChatAndUser(
@@ -44,7 +31,7 @@ export class MemberService {
 
   async createOwner(chatId: number, userId: number): Promise<MemberDomain> {
     return this.memberRepository.create(
-      MemberFactory.createOwner(chatId, userId),
+      this.memberFactory.createOwner(chatId, userId),
     );
   }
 
@@ -53,77 +40,25 @@ export class MemberService {
     dto: AddMemberDto,
     requesting: MemberDomain,
   ): Promise<MemberDomain> {
-    if (!requesting.hasPermission(Permission.ADD_MEMBERS)) {
-      throw new InsufficientPermissionsError();
-    }
-
-    const targetUser = await this.userService.findById(dto.userId);
-    if (!targetUser) throw new UserNotFoundError();
-
-    const existing = await this.findByChatAndUser(chatId, dto.userId);
-
-    if (existing?.isBanned()) throw new MemberBannedError();
-
-    const role = dto.role ?? Role.MEMBER;
-
-    if (
-      requesting.role !== Role.SUPER_ADMIN &&
-      ROLE_RANK[role] >= ROLE_RANK[requesting.role]
-    ) {
-      throw new InsufficientPermissionsError(
-        'Cannot assign a role equal to or higher than your own',
-      );
-    }
-
-    const data = MemberFactory.create({
-      chatId,
-      userId: dto.userId,
-      role,
-      permissions: dto.permissions,
-    });
-
-    if (existing?.hasLeft()) {
-      existing.rejoin(data.role, data.permissions);
-      return this.memberRepository.save(existing);
-    }
-
-    if (existing) throw new AlreadyMemberError();
-
-    return this.memberRepository.create(data);
+    const member = await this.memberFactory.add(chatId, dto, requesting);
+    return member.id !== undefined
+      ? this.memberRepository.save(member)
+      : this.memberRepository.create(member);
   }
 
   async ban(
     targetMember: MemberDomain,
     requesting: MemberDomain,
   ): Promise<void> {
-    if (!requesting.hasPermission(Permission.BAN_MEMBERS)) {
-      throw new InsufficientPermissionsError();
-    }
-    if (!requesting.canActOn(targetMember)) {
-      throw new InsufficientPermissionsError(
-        'Cannot ban a member with equal or higher role',
-      );
-    }
-    if (targetMember.isBanned()) return;
-
-    targetMember.ban();
-    await this.memberRepository.save(targetMember);
+    const changed = this.memberFactory.ban(targetMember, requesting);
+    if (changed) await this.memberRepository.save(targetMember);
   }
 
   async unban(
     targetMember: MemberDomain,
     requesting: MemberDomain,
   ): Promise<void> {
-    if (!requesting.hasPermission(Permission.BAN_MEMBERS)) {
-      throw new InsufficientPermissionsError();
-    }
-    if (!requesting.canActOn(targetMember)) {
-      throw new InsufficientPermissionsError(
-        'Cannot unban a member with equal or higher role',
-      );
-    }
-
-    targetMember.unban();
+    this.memberFactory.unban(targetMember, requesting);
     await this.memberRepository.save(targetMember);
   }
 
@@ -137,16 +72,11 @@ export class MemberService {
     dto: UpdatePermissionsDto,
     requesting: MemberDomain,
   ): Promise<MemberDomain> {
-    if (!requesting.hasPermission(Permission.EDIT_PERMISSIONS)) {
-      throw new InsufficientPermissionsError();
-    }
-    if (!requesting.canActOn(targetMember)) {
-      throw new InsufficientPermissionsError(
-        'Cannot edit permissions of a member with equal or higher role',
-      );
-    }
-
-    targetMember.updatePermissions(dto.permissions);
+    this.memberFactory.updatePermissions(
+      targetMember,
+      dto.permissions,
+      requesting,
+    );
     return this.memberRepository.save(targetMember);
   }
 
@@ -155,24 +85,7 @@ export class MemberService {
     dto: UpdateRoleDto,
     requesting: MemberDomain,
   ): Promise<MemberDomain> {
-    if (!requesting.hasPermission(Permission.EDIT_PERMISSIONS)) {
-      throw new InsufficientPermissionsError();
-    }
-    if (!requesting.canActOn(targetMember)) {
-      throw new InsufficientPermissionsError(
-        'Cannot change role of a member with equal or higher role',
-      );
-    }
-    if (
-      requesting.role !== Role.SUPER_ADMIN &&
-      ROLE_RANK[dto.role] >= ROLE_RANK[requesting.role]
-    ) {
-      throw new InsufficientPermissionsError(
-        'Cannot assign a role equal to or higher than your own',
-      );
-    }
-
-    targetMember.setRole(dto.role, DEFAULT_PERMISSIONS[dto.role]);
+    this.memberFactory.updateRole(targetMember, dto.role, requesting);
     return this.memberRepository.save(targetMember);
   }
 

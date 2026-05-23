@@ -1,10 +1,10 @@
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
-import { MemberGuard } from './member.guard';
-import { MemberService } from '../application/member.service';
-import { MemberDomain } from '../domain/member.domain';
-import { Permission, Role } from '../domain/member.enum';
+import { MemberGuard } from '../../src/member/presentation/member.guard';
+import { MemberService } from '../../src/member/application/member.service';
+import { MemberDomain } from '../../src/member/domain/member.domain';
+import { Permission, Role } from '../../src/member/domain/member.enum';
 
 const mockMemberService = { findByChatAndUser: jest.fn() };
 const mockReflector = { get: jest.fn() };

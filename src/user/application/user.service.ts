@@ -1,7 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { USER_REPOSITORY } from '../domain/user.repository.interface';
-import type { IUserRepository } from '../domain/user.repository.interface';
-import { UserFactory } from '../domain/user.factory';
+import {
+  type IUserRepository,
+  USER_REPOSITORY,
+} from '../domain/user.repository.interface';
+import { UserFactory, CreateUserParams } from '../domain/user.factory';
 import type { UserDomain } from '../domain/user.domain';
 
 @Injectable()
@@ -9,6 +11,7 @@ export class UserService {
   constructor(
     @Inject(USER_REPOSITORY)
     private readonly userRepository: IUserRepository,
+    private readonly userFactory: UserFactory,
   ) {}
 
   findById(id: number): Promise<UserDomain | null> {
@@ -24,41 +27,40 @@ export class UserService {
   }
 
   findByEmailOrTag(emailOrTag: string): Promise<UserDomain | null> {
-    const isEmail = emailOrTag.includes('@');
-    return isEmail
+    return emailOrTag.includes('@')
       ? this.userRepository.findByEmail(emailOrTag)
       : this.userRepository.findByTag(emailOrTag);
   }
 
-  create(data: Parameters<typeof UserFactory.create>[0]): Promise<UserDomain> {
-    return this.userRepository.create(UserFactory.create(data));
+  async create(params: CreateUserParams): Promise<UserDomain> {
+    const user = await this.userFactory.create(params);
+    return this.userRepository.create(user);
   }
 
-  async setOtp(id: number, otp: string): Promise<void> {
+  async update(
+    id: number,
+    data: Partial<{
+      nickname: string;
+      otp: string | null;
+      passwordHash: string;
+      emailVerified: boolean;
+    }>,
+  ): Promise<void> {
     const user = await this.userRepository.findById(id);
     if (!user) return;
-    user.setOtp(otp);
-    await this.userRepository.save(user);
-  }
 
-  async verifyEmail(id: number): Promise<void> {
-    const user = await this.userRepository.findById(id);
-    if (!user) return;
-    user.verifyEmail();
-    await this.userRepository.save(user);
-  }
+    if (data.emailVerified === true) {
+      user.verifyEmail();
+    } else if (data.otp !== undefined) {
+      if (data.otp === null) {
+        user.clearOtp();
+      } else {
+        user.setOtp(data.otp);
+      }
+    }
+    if (data.nickname !== undefined) user.updateNickname(data.nickname);
+    if (data.passwordHash !== undefined) user.updatePassword(data.passwordHash);
 
-  async updatePassword(id: number, passwordHash: string): Promise<void> {
-    const user = await this.userRepository.findById(id);
-    if (!user) return;
-    user.updatePassword(passwordHash);
-    await this.userRepository.save(user);
-  }
-
-  async updateNickname(id: number, nickname: string): Promise<void> {
-    const user = await this.userRepository.findById(id);
-    if (!user) return;
-    user.updateNickname(nickname);
     await this.userRepository.save(user);
   }
 }

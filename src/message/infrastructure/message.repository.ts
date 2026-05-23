@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { Message } from './message.entity';
-import { MessageDomain } from '../domain/message.domain';
+import { MessageMapper } from './message.mapper';
+import type { MessageDomain } from '../domain/message.domain';
 import type { IMessageRepository } from '../domain/message.repository.interface';
 
 @Injectable()
@@ -12,48 +13,30 @@ export class MessageRepository implements IMessageRepository {
     private readonly orm: Repository<Message>,
   ) {}
 
-  private toDomain(entity: Message): MessageDomain {
-    return new MessageDomain(
-      entity.id,
-      entity.content,
-      entity.chatId,
-      entity.memberId,
-      entity.createdAt,
-      entity.deletedAt,
-    );
-  }
-
   async findActiveById(
     id: number,
     chatId: number,
   ): Promise<MessageDomain | null> {
     const entity = await this.orm.findOne({ where: { id, chatId } });
     if (!entity || entity.deletedAt) return null;
-    return this.toDomain(entity);
+    return MessageMapper.toDomain(entity);
   }
 
   async create(domain: MessageDomain): Promise<MessageDomain> {
-    const entity = this.orm.create({
-      content: domain.content,
-      chatId: domain.chatId,
-      memberId: domain.memberId,
-      deletedAt: domain.deletedAt,
-    });
-    const saved = await this.orm.save(entity);
-    return this.toDomain(saved);
+    const {
+      id: _id,
+      createdAt: _createdAt,
+      ...data
+    } = MessageMapper.toEntity(domain);
+    const saved = await this.orm.save(this.orm.create(data));
+    return MessageMapper.toDomain(saved);
   }
 
   async save(domain: MessageDomain): Promise<MessageDomain> {
-    const entity = this.orm.create({
-      id: domain.id,
-      content: domain.content,
-      chatId: domain.chatId,
-      memberId: domain.memberId,
-      createdAt: domain.createdAt,
-      deletedAt: domain.deletedAt,
-    });
-    const saved = await this.orm.save(entity);
-    return this.toDomain(saved);
+    const saved = await this.orm.save(
+      this.orm.create(MessageMapper.toEntity(domain)),
+    );
+    return MessageMapper.toDomain(saved);
   }
 
   async list(
@@ -67,6 +50,6 @@ export class MessageRepository implements IMessageRepository {
       take,
       order: { createdAt: 'DESC' },
     });
-    return { items: entities.map((e) => this.toDomain(e)), total };
+    return { items: entities.map(MessageMapper.toDomain), total };
   }
 }

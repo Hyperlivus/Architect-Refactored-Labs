@@ -1,19 +1,23 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { MemberService } from './member.service';
+import { MemberService } from '../../src/member/application/member.service';
 import {
   MEMBER_REPOSITORY,
   IMemberRepository,
-} from '../domain/member.repository.interface';
-import { MemberDomain } from '../domain/member.domain';
-import { DEFAULT_PERMISSIONS, Permission, Role } from '../domain/member.enum';
+} from '../../src/member/domain/member.repository.interface';
+import { MemberFactory } from '../../src/member/domain/member.factory';
+import { MemberDomain } from '../../src/member/domain/member.domain';
+import {
+  DEFAULT_PERMISSIONS,
+  Permission,
+  Role,
+} from '../../src/member/domain/member.enum';
 import {
   AlreadyMemberError,
   InsufficientPermissionsError,
   MemberBannedError,
   MemberNotFoundError,
-} from '../domain/member.errors';
-import { UserService } from '../../user/application/user.service';
-import { UserNotFoundError } from '../../user/domain/user.errors';
+} from '../../src/member/domain/member.errors';
+import { UserNotFoundError } from '../../src/user/domain/user.errors';
 
 const mockMemberRepo: Partial<IMemberRepository> = {
   findByChatAndUser: jest.fn(),
@@ -22,7 +26,14 @@ const mockMemberRepo: Partial<IMemberRepository> = {
   save: jest.fn(),
 };
 
-const mockUserService = { findById: jest.fn() };
+const mockMemberFactory = {
+  createOwner: jest.fn(),
+  add: jest.fn(),
+  ban: jest.fn(),
+  prepareUnban: jest.fn(),
+  updatePermissions: jest.fn(),
+  updateRole: jest.fn(),
+};
 
 const make = (
   overrides: {
@@ -53,7 +64,7 @@ describe('MemberService', () => {
       providers: [
         MemberService,
         { provide: MEMBER_REPOSITORY, useValue: mockMemberRepo },
-        { provide: UserService, useValue: mockUserService },
+        { provide: MemberFactory, useValue: mockMemberFactory },
       ],
     }).compile();
 
@@ -69,41 +80,47 @@ describe('MemberService', () => {
     });
 
     it('should create a new member with default MEMBER role', async () => {
-      mockUserService.findById.mockResolvedValue({ id: 2 });
-      (mockMemberRepo.findByChatAndUser as jest.Mock).mockResolvedValue(null);
-      const newMember = make({ id: 20, userId: 2 });
-      (mockMemberRepo.create as jest.Mock).mockResolvedValue(newMember);
+      const newMember = new MemberDomain(
+        undefined,
+        2,
+        5,
+        Role.MEMBER,
+        DEFAULT_PERMISSIONS[Role.MEMBER],
+        null,
+        null,
+      );
+      const savedMember = make({ id: 20, userId: 2 });
+      (mockMemberFactory.add as jest.Mock).mockResolvedValue(newMember);
+      (mockMemberRepo.create as jest.Mock).mockResolvedValue(savedMember);
 
       const result = await service.addMember(5, { userId: 2 }, requesting);
 
-      expect(mockMemberRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          role: Role.MEMBER,
-          permissions: DEFAULT_PERMISSIONS[Role.MEMBER],
-        }),
+      expect(mockMemberFactory.add).toHaveBeenCalledWith(
+        5,
+        { userId: 2 },
+        requesting,
       );
-      expect(result).toEqual(newMember);
+      expect(mockMemberRepo.create).toHaveBeenCalledWith(newMember);
+      expect(result).toEqual(savedMember);
     });
 
-    it('should reactivate a previously left member', async () => {
-      const leftMember = make({ leftAt: new Date(), userId: 2 });
-      mockUserService.findById.mockResolvedValue({ id: 2 });
-      (mockMemberRepo.findByChatAndUser as jest.Mock).mockResolvedValue(
-        leftMember,
-      );
+    it('should reactivate a previously left member via save', async () => {
+      const leftMember = make({ id: 10, userId: 2, leftAt: new Date() });
+      leftMember.rejoin(Role.MEMBER, DEFAULT_PERMISSIONS[Role.MEMBER]);
+      (mockMemberFactory.add as jest.Mock).mockResolvedValue(leftMember);
       (mockMemberRepo.save as jest.Mock).mockImplementation((m: MemberDomain) =>
         Promise.resolve(m),
       );
 
       const result = await service.addMember(5, { userId: 2 }, requesting);
 
+      expect(mockMemberRepo.save).toHaveBeenCalledWith(leftMember);
       expect(result.leftAt).toBeNull();
     });
 
     it('should throw MemberBannedError when target is banned', async () => {
-      mockUserService.findById.mockResolvedValue({ id: 2 });
-      (mockMemberRepo.findByChatAndUser as jest.Mock).mockResolvedValue(
-        make({ bannedAt: new Date() }),
+      (mockMemberFactory.add as jest.Mock).mockRejectedValue(
+        new MemberBannedError(),
       );
 
       await expect(
@@ -112,9 +129,8 @@ describe('MemberService', () => {
     });
 
     it('should throw AlreadyMemberError when already an active member', async () => {
-      mockUserService.findById.mockResolvedValue({ id: 2 });
-      (mockMemberRepo.findByChatAndUser as jest.Mock).mockResolvedValue(
-        make({ userId: 2 }),
+      (mockMemberFactory.add as jest.Mock).mockRejectedValue(
+        new AlreadyMemberError(),
       );
 
       await expect(
@@ -123,7 +139,9 @@ describe('MemberService', () => {
     });
 
     it('should throw UserNotFoundError when target user does not exist', async () => {
-      mockUserService.findById.mockResolvedValue(null);
+      (mockMemberFactory.add as jest.Mock).mockRejectedValue(
+        new UserNotFoundError(),
+      );
 
       await expect(
         service.addMember(5, { userId: 99 }, requesting),
@@ -131,8 +149,11 @@ describe('MemberService', () => {
     });
 
     it('should throw InsufficientPermissionsError when ADMIN tries to assign ADMIN role', async () => {
-      mockUserService.findById.mockResolvedValue({ id: 2 });
-      (mockMemberRepo.findByChatAndUser as jest.Mock).mockResolvedValue(null);
+      (mockMemberFactory.add as jest.Mock).mockRejectedValue(
+        new InsufficientPermissionsError(
+          'Cannot assign a role equal to or higher than your own',
+        ),
+      );
 
       await expect(
         service.addMember(5, { userId: 2, role: Role.ADMIN }, requesting),
@@ -141,10 +162,10 @@ describe('MemberService', () => {
 
     it('should allow SUPER_ADMIN to assign ADMIN role', async () => {
       const superAdmin = make({ id: 1, role: Role.SUPER_ADMIN });
-      mockUserService.findById.mockResolvedValue({ id: 2 });
-      (mockMemberRepo.findByChatAndUser as jest.Mock).mockResolvedValue(null);
-      const newAdmin = make({ id: 20, role: Role.ADMIN });
-      (mockMemberRepo.create as jest.Mock).mockResolvedValue(newAdmin);
+      const newAdmin = make({ id: undefined, userId: 2, role: Role.ADMIN });
+      const savedAdmin = make({ id: 20, role: Role.ADMIN });
+      (mockMemberFactory.add as jest.Mock).mockResolvedValue(newAdmin);
+      (mockMemberRepo.create as jest.Mock).mockResolvedValue(savedAdmin);
 
       const result = await service.addMember(
         5,
@@ -163,23 +184,34 @@ describe('MemberService', () => {
         permissions: DEFAULT_PERMISSIONS[Role.ADMIN],
       });
       const target = make({ id: 2, role: Role.MEMBER });
+      (mockMemberFactory.ban as jest.Mock).mockReturnValue(true);
       (mockMemberRepo.save as jest.Mock).mockImplementation((m: MemberDomain) =>
         Promise.resolve(m),
       );
 
       await service.ban(target, actor);
 
-      expect(target.isBanned()).toBe(true);
+      expect(mockMemberFactory.ban).toHaveBeenCalledWith(target, actor);
       expect(mockMemberRepo.save).toHaveBeenCalledWith(target);
     });
 
     it('should throw when actor lacks BAN_MEMBERS permission', async () => {
+      (mockMemberFactory.ban as jest.Mock).mockImplementation(() => {
+        throw new InsufficientPermissionsError();
+      });
+
       await expect(
         service.ban(make({ id: 2 }), make({ id: 1, permissions: [] })),
       ).rejects.toThrow(InsufficientPermissionsError);
     });
 
     it('should throw when ADMIN tries to ban another ADMIN', async () => {
+      (mockMemberFactory.ban as jest.Mock).mockImplementation(() => {
+        throw new InsufficientPermissionsError(
+          'Cannot ban a member with equal or higher role',
+        );
+      });
+
       const actor = make({
         id: 1,
         role: Role.ADMIN,
@@ -194,6 +226,7 @@ describe('MemberService', () => {
     it('should be a no-op when target is already banned', async () => {
       const actor = make({ id: 1, role: Role.SUPER_ADMIN });
       const target = make({ id: 2, bannedAt: new Date() });
+      (mockMemberFactory.ban as jest.Mock).mockReturnValue(false);
 
       await service.ban(target, actor);
       expect(mockMemberRepo.save).not.toHaveBeenCalled();
@@ -222,18 +255,29 @@ describe('MemberService', () => {
         permissions: DEFAULT_PERMISSIONS[Role.SUPER_ADMIN],
       });
       const target = make({ id: 2, role: Role.MEMBER });
-      const dto = {
-        permissions: [Permission.SEND_MESSAGES, Permission.ADD_MEMBERS],
-      };
+      const newPerms = [Permission.SEND_MESSAGES, Permission.ADD_MEMBERS];
+      (mockMemberFactory.updatePermissions as jest.Mock).mockImplementation(
+        (t: MemberDomain, perms: Permission[]) => t.updatePermissions(perms),
+      );
       (mockMemberRepo.save as jest.Mock).mockImplementation((m: MemberDomain) =>
         Promise.resolve(m),
       );
 
-      const result = await service.updatePermissions(target, dto, actor);
-      expect(result.permissions).toEqual(dto.permissions);
+      const result = await service.updatePermissions(
+        target,
+        { permissions: newPerms },
+        actor,
+      );
+      expect(result.permissions).toEqual(newPerms);
     });
 
     it('should throw when actor lacks EDIT_PERMISSIONS permission', async () => {
+      (mockMemberFactory.updatePermissions as jest.Mock).mockImplementation(
+        () => {
+          throw new InsufficientPermissionsError();
+        },
+      );
+
       await expect(
         service.updatePermissions(
           make({ id: 2 }),
@@ -248,6 +292,10 @@ describe('MemberService', () => {
     it('should update role and reset permissions to defaults', async () => {
       const actor = make({ id: 1, role: Role.SUPER_ADMIN });
       const target = make({ id: 2, role: Role.MEMBER });
+      (mockMemberFactory.updateRole as jest.Mock).mockImplementation(
+        (t: MemberDomain, role: Role) =>
+          t.setRole(role, DEFAULT_PERMISSIONS[role]),
+      );
       (mockMemberRepo.save as jest.Mock).mockImplementation((m: MemberDomain) =>
         Promise.resolve(m),
       );
@@ -263,6 +311,12 @@ describe('MemberService', () => {
     });
 
     it('should throw when ADMIN tries to promote to ADMIN', async () => {
+      (mockMemberFactory.updateRole as jest.Mock).mockImplementation(() => {
+        throw new InsufficientPermissionsError(
+          'Cannot assign a role equal to or higher than your own',
+        );
+      });
+
       await expect(
         service.updateRole(
           make({ id: 2, role: Role.MEMBER }),

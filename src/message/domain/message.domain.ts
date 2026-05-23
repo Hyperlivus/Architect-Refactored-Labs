@@ -8,7 +8,9 @@ export class MessageDomain {
     private _deletedAt: Date | null,
   ) {}
 
-  get deletedAt(): Date | null { return this._deletedAt; }
+  get deletedAt(): Date | null {
+    return this._deletedAt;
+  }
 
   isDeleted(): boolean {
     return this._deletedAt !== null;

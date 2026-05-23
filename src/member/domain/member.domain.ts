@@ -11,10 +11,18 @@ export class MemberDomain {
     private _leftAt: Date | null,
   ) {}
 
-  get role(): Role { return this._role; }
-  get permissions(): Permission[] { return this._permissions; }
-  get bannedAt(): Date | null { return this._bannedAt; }
-  get leftAt(): Date | null { return this._leftAt; }
+  get role(): Role {
+    return this._role;
+  }
+  get permissions(): Permission[] {
+    return this._permissions;
+  }
+  get bannedAt(): Date | null {
+    return this._bannedAt;
+  }
+  get leftAt(): Date | null {
+    return this._leftAt;
+  }
 
   hasPermission(permission: Permission): boolean {
     return (
