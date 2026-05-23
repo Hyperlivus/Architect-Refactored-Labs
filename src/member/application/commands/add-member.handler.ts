@@ -66,6 +66,6 @@ export class AddMemberHandler
 
     if (existing) throw new AlreadyMemberError();
 
-    return toMemberReadModel(await this.memberRepository.create(domain));
+    return toMemberReadModel(await this.memberRepository.save(domain));
   }
 }

@@ -23,7 +23,7 @@ export class VerifyEmailHandler
     if (!user) throw new InvalidCredentialsError();
     if (!user.otp || user.otp !== otp) throw new InvalidOtpError();
 
-    await this.userService.update(user.id!, { emailVerified: true, otp: null });
+    await this.userService.verifyEmail(user.id!);
 
     return {
       accessToken: this.jwtService.sign({ sub: user.id!, email: user.email }),

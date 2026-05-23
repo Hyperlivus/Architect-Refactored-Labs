@@ -9,7 +9,6 @@ import type { MemberService } from '../../../../../src/member/application/member
 const mockRepo: jest.Mocked<IChatRepository> = {
   findById: jest.fn(),
   findByTag: jest.fn(),
-  create: jest.fn(),
   save: jest.fn(),
   list: jest.fn(),
 };
@@ -26,7 +25,7 @@ describe('CreateChatHandler', () => {
 
   it('should create chat and return its id', async () => {
     mockRepo.findByTag.mockResolvedValue(null);
-    mockRepo.create.mockResolvedValue(new ChatDomain(1, 'Test Chat', 'testchat', null));
+    mockRepo.save.mockResolvedValue(new ChatDomain(1, 'Test Chat', 'testchat', null));
     (mockMemberService.createOwner as jest.Mock).mockResolvedValue({});
 
     const id = await handler.execute(
@@ -34,7 +33,7 @@ describe('CreateChatHandler', () => {
     );
 
     expect(id).toBe(1);
-    expect(mockRepo.create).toHaveBeenCalled();
+    expect(mockRepo.save).toHaveBeenCalled();
     expect(mockMemberService.createOwner).toHaveBeenCalledWith(1, 42);
   });
 
@@ -47,7 +46,7 @@ describe('CreateChatHandler', () => {
       handler.execute(new CreateChatCommand('New', 'testchat', null, 1)),
     ).rejects.toThrow(ChatTagTakenError);
 
-    expect(mockRepo.create).not.toHaveBeenCalled();
+    expect(mockRepo.save).not.toHaveBeenCalled();
   });
 
   it('should throw when factory validation fails (short name)', async () => {

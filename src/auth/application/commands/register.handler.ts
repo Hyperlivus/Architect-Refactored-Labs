@@ -34,7 +34,7 @@ export class RegisterHandler implements ICommandHandler<RegisterCommand, void> {
     });
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    await this.userService.update(user.id!, { otp });
+    await this.userService.setOtp(user.id!, otp);
     await this.mailService.send(otpEmail(user.email, otp));
   }
 }
